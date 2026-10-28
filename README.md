@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# YLDC by Fondacio — Plataforma
 
-## Getting Started
+Plataforma de acompañamiento socioemocional para jóvenes (Young Leaders Development Cycle).
+**Stack:** Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Supabase (PostgreSQL, Auth, Realtime, Storage).
 
-First, run the development server:
+## Puesta en marcha
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Página raíz (`/`) = **showcase del sistema de diseño** (paleta YLDC, botones, inputs, badges, cards, checkbox, tooltip, stepper). Valídala contra los mockups de `../mockups/png/`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variables de entorno
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Copia `.env.example` → `.env.local`
+2. Pega `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` desde *Project Settings → API* en Supabase.
 
-## Learn More
+## Estructura (planeada por fases)
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+  app/
+    (estudiante)/    # flujo PIN → identificación → sesión en vivo (1.1–1.10)
+    (facilitador)/   # login → sesiones → monitor en vivo (2.1–2.8)
+    (psicologa)/     # cursos → comentarios (3.1–3.4)
+    (admin)/         # colegios, cursos, estudiantes, reportes (4.1–4.7)
+  components/
+    ui/              # ✅ kit base (Button, Input, Select, Badge, Card, Checkbox, Tooltip, Stepper)
+    layout/          # sidebars, headers (por construir)
+  lib/               # cliente Supabase, helpers, tipos
+supabase/            # schema.sql + seed.sql (pegar en el SQL Editor)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Pendientes de setup externo
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Poppins:** copiar `Poppins-Regular/Medium/SemiBold/Bold.ttf` a `src/fonts/` y montar `next/font/local` en `layout.tsx` (el CSS ya referencia `var(--font-poppins)`).
+- **Supabase:** crear proyecto `yldc-fondacio` (región São Paulo) y pegar `supabase/schema.sql` + `seed.sql` en el SQL Editor.
+- **GitHub:** repo remoto `yldc-app` + primer push.
 
-## Deploy on Vercel
+## Roles y acceso
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Rol | Acceso | Pantallas |
+|---|---|---|
+| Estudiante | **PIN de sesión** (sin cuenta) | 1.1–1.10 |
+| Facilitador | Email + password (Supabase Auth) | 2.1–2.8 |
+| Psicóloga | Email + password (Supabase Auth) | 3.1–3.4 |
+| Admin | Email + password (Supabase Auth) | 4.1–4.7 |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Convenciones de diseño
+
+- Paleta YLDC como tokens Tailwind (`bg-navy`, `text-pink`, `bg-tint-teal`, …) — ver `globals.css`.
+- Grid 8pt (espaciados múltiplos de 4px/8px), esquinas: botones `rounded-xl`, cards `rounded-2xl`, CTA móvil `rounded-full`.
+- Español colombiano, fechas `19/03/2026`, horas `10:05 a.m.`

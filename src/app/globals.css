@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+  Sistema de diseño YLDC by Fondacio
+  Paleta y tokens extraídos de los mockups de Figma (archivo czOJBZyHM8gOdYhbsrQ436).
+  Grid de 8pt · Tipografía Poppins · Español (Colombia).
+*/
+@theme {
+  /* ── Paleta YLDC ─────────────────────────────── */
+  --color-navy: #2c2453; /* primario 40% */
+  --color-yellow: #f8db01; /* acento / CTA 35% */
+  --color-pink: #ef4c6a; /* alerta / destrucción 17% */
+  --color-teal: #2caec1; /* secundario / éxito 8% */
+  --color-platinum: #e6e7e8; /* superficies 3% */
+
+  /* Tints (mezclas sobre blanco, usadas en Figma) */
+  --color-tint-teal: #dff4f8; /* teal 12% — badges "Completada" */
+  --color-tint-pink: #fde7eb; /* pink 12% — estados suaves */
+  --color-tint-yellow: #fdf7c6; /* yellow 20% — badge "En curso" */
+  --color-tint-blue: #d6eef7; /* clima Lluvioso */
+  --color-tint-navy: #f0eef7; /* navy 6% — hovers / filas activas */
+
+  /* Texto */
+  --color-ink: #262230; /* texto principal (neutro cálido) */
+  --color-ink-2: #6b6f76; /* texto secundario */
+  --color-ink-disabled: #9a99a6; /* texto deshabilitado */
+
+  /* Bordes */
+  --color-stroke: #c9c9ce; /* bordes de inputs / checkboxes */
+
+  /* ── Sombras ─────────────────────────────────── */
+  --shadow-card: 0 8px 24px rgba(44, 36, 83, 0.08);
+  --shadow-modal: 0 16px 40px rgba(44, 36, 83, 0.16);
+
+  /* ── Tipografía ──────────────────────────────── */
+  /* var(--font-poppins) se activa con next/font/local cuando lleguen
+     los archivos .ttf; mientras tanto cae a Segoe UI sin romper nada. */
+  --font-sans: var(--font-poppins, "Poppins"), "Segoe UI", "Helvetica Neue",
+    Arial, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: #ffffff;
+    color: var(--color-ink);
+    font-family: var(--font-sans);
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
