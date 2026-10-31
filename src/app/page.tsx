@@ -10,6 +10,7 @@ import {
   Checkbox,
   Tooltip,
   Stepper,
+  Logo,
 } from "@/components/ui";
 
 const PALETTE = [
@@ -48,7 +49,8 @@ export default function Home() {
 
   return (
     <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-12 flex flex-col gap-12">
-      <header className="flex flex-col gap-1">
+      <header className="flex flex-col gap-4">
+        <Logo variant="light" height={48} />
         <p className="text-xs font-medium tracking-[0.2em] uppercase text-teal">
           Young Leaders Development Cycle
         </p>
@@ -60,6 +62,51 @@ export default function Home() {
           (pendiente de instalar) con fallback Segoe UI.
         </p>
       </header>
+
+      <Section title="Logo de marca (brandboard oficial)">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <Card className="p-5 bg-navy flex items-center justify-center min-h-32">
+            <Logo variant="dark" height={40} />
+          </Card>
+          <Card className="p-5 border border-platinum shadow-none flex items-center justify-center min-h-32">
+            <Logo variant="light" height={40} />
+          </Card>
+          <Card className="p-5 bg-navy flex items-center justify-center min-h-32">
+            <Logo variant="yellow" height={40} />
+          </Card>
+          <Card className="p-5 border border-platinum shadow-none flex items-center justify-center min-h-32">
+            <Logo variant="rose" height={40} />
+          </Card>
+          <Card className="p-5 border border-platinum shadow-none flex items-center justify-center min-h-32">
+            <Logo variant="teal" height={40} />
+          </Card>
+        </div>
+        <div className="flex flex-wrap items-center gap-6">
+          <span className="text-xs text-ink-2">Isotipos:</span>
+          <Card className="p-3 bg-navy flex items-center justify-center">
+            <Logo variant="dark" isotipo height={28} />
+          </Card>
+          <Card className="p-3 border border-platinum shadow-none flex items-center justify-center">
+            <Logo variant="light" isotipo height={28} />
+          </Card>
+          <Card className="p-3 bg-navy flex items-center justify-center">
+            <Logo variant="yellow" isotipo height={28} />
+          </Card>
+          <Card className="p-3 border border-platinum shadow-none flex items-center justify-center">
+            <Logo variant="rose" isotipo height={28} />
+          </Card>
+          <Card className="p-3 border border-platinum shadow-none flex items-center justify-center">
+            <Logo variant="teal" isotipo height={28} />
+          </Card>
+        </div>
+        <p className="text-xs text-ink-2">
+          Uso: <code className="text-navy">&lt;Logo variant="dark" /&gt;</code> en
+          fondos oscuros (navy, rosa) · <code className="text-navy">variant="light"</code>{" "}
+          en claros (blanco, amarillo) · <code className="text-navy">variant="yellow"</code>{" "}
+          sobre Space Cadet · rose/teal decorativas ·{" "}
+          <code className="text-navy">isotipo</code> para el ícono solo.
+        </p>
+      </Section>
 
       <Section title="Paleta">
         <div className="grid grid-cols-5 gap-3">
