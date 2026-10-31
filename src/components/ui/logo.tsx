@@ -38,7 +38,7 @@ export function Logo({
   const h = height ?? (isotipo ? 30 : 36);
   return (
     <Image
-      src={isotipo ? `/logo/isotipo-${variant}.png` : `/logo/logo-${variant}.png`}
+      src={isotipo ? `/logo/isotipo-${variant}.png` : `/logo/logo-yldc-${variant}.png`}
       alt="Young Lives Development Center · by Fondacio"
       width={dims.width}
       height={dims.height}

@@ -50,7 +50,7 @@ export default function Home() {
   return (
     <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-12 flex flex-col gap-12">
       <header className="flex flex-col gap-4">
-        <Logo variant="light" height={48} />
+        <Logo variant="light" height={48} className="self-start" />
         <p className="text-xs font-medium tracking-[0.2em] uppercase text-teal">
           Young Leaders Development Cycle
         </p>
