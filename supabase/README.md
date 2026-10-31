@@ -1,0 +1,82 @@
+# Supabase — puesta a punto (SQL Editor, sin CLI)
+
+Pegar en este orden en **Supabase → Project → SQL Editor → New query → Run**.
+
+## 1. Esquema
+
+1. Abrir `schema.sql`, copiar TODO el contenido y ejecutarlo.
+2. Resultado esperado: "Success. No rows returned" y 4 pestañas de notice por la
+   publicación realtime (`duplicate_object` ignorado silenciosamente si ya existía).
+
+## 2. Seed
+
+1. Abrir `seed.sql`, copiar TODO y ejecutarlo.
+2. Crea: colegio piloto, 2 cursos, 16 estudiantes, 2 facilitadores, 2 psicólogas,
+   2 admins, 3 talleres, preguntas de actividad, 3 sesiones (1 abierta con PIN
+   `841279`), comentarios de ejemplo, 3 filas de audit_log y las **300 preguntas
+   del test de Holland** (borrador balanceado — ver warning en el encabezado).
+3. Verificación rápida:
+   ```sql
+   select estado, fase_actual, pin_acceso from sesiones order by estado;
+   select seccion, count(*) from preguntas_test_holland group by seccion order by seccion;
+   -- esperado: aptitudes 60 · intereses_actividades 90 · intereses_ocupaciones 90 · personalidad 60
+   ```
+
+## 3. Crear los usuarios de Supabase Auth
+
+El estudiante NO tiene cuenta (entra por PIN). Los demás roles sí:
+
+| Correo | Rol |
+|---|---|
+| `maria.torres@yldc.app` | Facilitadora (lead) |
+| `daniela.restrepo@yldc.app` | Facilitadora (co) |
+| `diana.rios@yldc.app` | Psicóloga |
+| `sara.marquez@yldc.app` | Psicóloga practicante |
+| `admin1@yldc.app` | Admin |
+| `admin2@yldc.app` | Admin |
+
+En **Authentication → Users → Add user → Create new user**: escribir el correo,
+ponle contraseña provisional y deja ON "Auto Confirm User". Repetir por cada fila.
+
+## 4. Vincular las cuentas Auth con las tablas de rol
+
+Las policies de RLS identifican a cada usuario porque `facilitadores.auth_id`,
+`psicologas.auth_id` y `admins.auth_id` guardan el UUID de Auth. Una vez creados
+los 6 usuarios, ejecuta esta consulta y listo:
+
+```sql
+update facilitadores f set auth_id = u.id from auth.users u where u.email = f.correo;
+update psicologas    p set auth_id = u.id from auth.users u where u.email = p.correo;
+update admins        a set auth_id = u.id from auth.users u where u.email = a.correo;
+```
+
+## 5. variables para el frontend
+
+**Settings → API**: copiar *Project URL* y *anon public key* a `yldc-app/.env.local`:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+```
+
+(Ver `.env.example` — no compartir la service role key.)
+
+## 6. Romper una cuenta sin eliminarla (activar/desactivar)
+
+```sql
+update facilitadores set activo = false where correo = 'daniela.restrepo@yldc.app';
+update psicologas    set activa = false where correo = 'sara.marquez@yldc.app';
+update admins        set activo = false where correo = 'admin2@yldc.app';
+```
+
+(El panel admin hará esto con botón Activar/Desactivar y lo registrará en `audit_log`.)
+
+## Cómo protege los datos esta base (repaso rápido)
+
+- Estudiante: escribe solo por RPC (`fn_unirse_sesion`, `fn_guardar_respuesta`,
+  `fn_guardar_respuestas_test`, `fn_calcular_holland`, `fn_ver_resultado_propio`),
+  que validan el **PIN** de sesión y que el estudiante pertenezca al curso de esa sesión.
+- Facilitador: ve sesiones donde es **lead o co**; nunca elimina, solo cierra y comenta.
+- Psicóloga: ve estudiantes/cursos **de su colegio** (o de todos si `colegio_id` es null);
+  1 comentario individual por estudiante (UNIQUE).
+- Admin: dueño de los catálogos y del `audit_log`. Máximo 3 cuentas.
