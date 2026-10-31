@@ -5,21 +5,28 @@ import Image from "next/image";
  * Extraído del brandboard oficial (Brandboard (2).jpg) con transparencia.
  *
  * Variantes y uso según fondo:
- *  - dark:   tinta blanca   → fondos oscuros (navy, rosa, teal, fotos)
- *  - light:  Space Cadet    → fondos claros (blanco, platinum, amarillo)
- *  - yellow: amarillo       → fondos Space Cadet (como en el brandboard)
- *  - rose:   Infra Red      → decorativa
- *  - teal:   Blue Green     → decorativa
+ *  - color:  multicolor (isotipo teal/rosa/amarillo + Space Cadet) → fondos claros. **Principal (default)**.
+ *  - dark:   tinta blanca     → fondos oscuros (navy, rosa)
+ *  - light:  Space Cadet      → fondos claros (versión monocroma p/ tamaños pequeños)
+ *  - yellow: Sizzling Sunrise → fondos Space Cadet (como el bloque navy del brandboard)
+ *  - rose:   Infra Red        → decorativa
+ *  - teal:   Blue Green       → decorativa
  */
 
-export type LogoVariant = "dark" | "light" | "yellow" | "rose" | "teal";
+export type LogoVariant =
+  | "color"
+  | "dark"
+  | "light"
+  | "yellow"
+  | "rose"
+  | "teal";
 
-const LOGO_DIMS = { width: 428, height: 280 };
-const ISOTIPO_DIMS = { width: 184, height: 256 };
+const LOGO_DIMS = { width: 449, height: 290 };
+const ISOTIPO_DIMS = { width: 245, height: 251 };
 
 interface LogoProps {
   variant?: LogoVariant;
-  /** true = solo el ícono (figura), sin texto */
+  /** true = solo el ícono (figura sobre los círculos), sin texto */
   isotipo?: boolean;
   /** Altura en px. Default: 36 (logo) / 30 (isotipo). El ancho es automático. */
   height?: number;
@@ -28,7 +35,7 @@ interface LogoProps {
 }
 
 export function Logo({
-  variant = "light",
+  variant = "color",
   isotipo = false,
   height,
   priority = false,

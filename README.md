@@ -51,6 +51,6 @@ supabase/            # schema.sql + seed.sql (pegar en el SQL Editor)
 ## Convenciones de diseño
 
 - Paleta YLDC como tokens Tailwind (`bg-navy`, `text-pink`, `bg-tint-teal`, …) — ver `globals.css`.
-- **Logo:** componente `<Logo variant="dark|light|yellow|rose|teal" isotipo? />` (`src/components/ui/logo.tsx`). Archivos en `public/logo/` extraídos del brandboard oficial. `dark` (blanca) en fondos oscuros · `light` (Space Cadet) en claros · `yellow` sobre navy · rose/teal decorativas.
+- **Logo:** componente `<Logo variant="color|dark|light|yellow|rose|teal" isotipo? />` (`src/components/ui/logo.tsx`). Archivos en `public/logo/` extraídos del brandboard oficial. **Principal = `color`** (multicolor, fondos claros — es el default) · `dark` (blanca) en fondos oscuros · `light` (Space Cadet mono) en claros · `yellow` sobre navy · rose/teal decorativas.
 - Grid 8pt (espaciados múltiplos de 4px/8px), esquinas: botones `rounded-xl`, cards `rounded-2xl`, CTA móvil `rounded-full`.
 - Español colombiano, fechas `19/03/2026`, horas `10:05 a.m.`

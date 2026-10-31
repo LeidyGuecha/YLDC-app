@@ -50,7 +50,7 @@ export default function Home() {
   return (
     <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-12 flex flex-col gap-12">
       <header className="flex flex-col gap-4">
-        <Logo variant="light" height={48} className="self-start" />
+        <Logo variant="color" height={56} className="self-start" />
         <p className="text-xs font-medium tracking-[0.2em] uppercase text-teal">
           Young Leaders Development Cycle
         </p>
@@ -64,7 +64,11 @@ export default function Home() {
       </header>
 
       <Section title="Logo de marca (brandboard oficial)">
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <Card className="p-5 border border-platinum shadow-none flex flex-col items-center justify-center gap-1.5 min-h-32">
+            <Logo variant="color" height={40} />
+            <span className="text-[10px] text-ink-2">principal</span>
+          </Card>
           <Card className="p-5 bg-navy flex items-center justify-center min-h-32">
             <Logo variant="dark" height={40} />
           </Card>
@@ -83,6 +87,9 @@ export default function Home() {
         </div>
         <div className="flex flex-wrap items-center gap-6">
           <span className="text-xs text-ink-2">Isotipos:</span>
+          <Card className="p-3 border border-platinum shadow-none flex items-center justify-center">
+            <Logo variant="color" isotipo height={28} />
+          </Card>
           <Card className="p-3 bg-navy flex items-center justify-center">
             <Logo variant="dark" isotipo height={28} />
           </Card>
@@ -100,11 +107,13 @@ export default function Home() {
           </Card>
         </div>
         <p className="text-xs text-ink-2">
-          Uso: <code className="text-navy">&lt;Logo variant="dark" /&gt;</code> en
-          fondos oscuros (navy, rosa) · <code className="text-navy">variant="light"</code>{" "}
-          en claros (blanco, amarillo) · <code className="text-navy">variant="yellow"</code>{" "}
-          sobre Space Cadet · rose/teal decorativas ·{" "}
-          <code className="text-navy">isotipo</code> para el ícono solo.
+          Uso: <code className="text-navy">&lt;Logo /&gt;</code> = variante{" "}
+          <code className="text-navy">color</code>, el logo principal para fondos
+          claros (es el default) · <code className="text-navy">variant="dark"</code>{" "}
+          en fondos oscuros (navy, rosa) · <code className="text-navy">variant="light"</code>{" "}
+          mono en claros · <code className="text-navy">variant="yellow"</code> sobre
+          Space Cadet · rose/teal decorativas · <code className="text-navy">isotipo</code>{" "}
+          para el ícono solo.
         </p>
       </Section>
 
