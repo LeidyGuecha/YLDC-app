@@ -20,64 +20,7 @@
 create extension if not exists pgcrypto;
 
 -- ============================================================================
--- 1. HELPERS DE ROL (SECURITY DEFINER — sin recursión de RLS)
--- ============================================================================
-
-create or replace function fn_rol_actual()
-returns text
-language sql
-security definer
-stable
-set search_path = public
-as $$
-  select case
-    when exists (select 1 from admins a      where a.auth_id = auth.uid() and a.activo)  then 'admin'
-    when exists (select 1 from psicologas p  where p.auth_id = auth.uid() and p.activa)  then 'psicologa'
-    when exists (select 1 from facilitadores f where f.auth_id = auth.uid() and f.activo) then 'facilitador'
-    else 'anon'
-  end;
-$$;
-
--- ¿auth.uid() es lead o co-facilitador de la sesión p_sesion?
-create or replace function fn_facilitador_de_sesion(p_sesion uuid)
-returns boolean
-language sql
-security definer
-stable
-set search_path = public
-as $$
-  select exists (
-    select 1 from sesiones s
-    where s.id = p_sesion
-      and (
-        s.facilitador_lead_id = auth.uid()
-        or auth.uid() = any (s.co_facilitadores_ids)
-      )
-  );
-$$;
-
--- ¿auth.uid() es psicóloga (activa) del colegio del curso p_curso?
--- (colegio_id null = sirve en todos los colegios, caso piloto)
-create or replace function fn_psicologa_de_curso(p_curso uuid)
-returns boolean
-language sql
-security definer
-stable
-set search_path = public
-as $$
-  select exists (
-    select 1 from psicologas p
-    where p.auth_id = auth.uid()
-      and p.activa
-      and (
-        p.colegio_id is null
-        or p.colegio_id = (select c.colegio_id from cursos c where c.id = p_curso)
-      )
-  );
-$$;
-
--- ============================================================================
--- 2. TABLAS BASE (brief §13)
+-- 1. TABLAS BASE (brief §13)
 -- ============================================================================
 
 create table if not exists colegios (
@@ -207,7 +150,7 @@ create table if not exists comentarios_individuales_psicologa (
 );
 
 -- ============================================================================
--- 3. TABLAS NUEVAS — TEST DE HOLLAND (reunión con Liliana)
+-- 2. TABLAS NUEVAS — TEST DE HOLLAND (reunión con Liliana)
 -- ============================================================================
 
 -- Catálogo de las 300 preguntas (seed estático → supabase/seed.sql)
@@ -257,7 +200,7 @@ create table if not exists resultados_test_holland (
 );
 
 -- ============================================================================
--- 4. AUDIT LOG — pantalla 4.8 (admin 1 ve lo que hizo admin 2)
+-- 3. AUDIT LOG — pantalla 4.8 (admin 1 ve lo que hizo admin 2)
 -- ============================================================================
 
 create table if not exists audit_log (
@@ -277,7 +220,7 @@ create index if not exists idx_audit_log_fecha    on audit_log (fecha desc);
 create index if not exists idx_audit_log_entidad  on audit_log (entidad);
 
 -- ============================================================================
--- 5. COMPATIBILIDAD con SQL previo (por si se corrió un schema parcial)
+-- 4. COMPATIBILIDAD con SQL previo (por si se corrió un schema parcial)
 -- ============================================================================
 
 alter table facilitadores add column if not exists activo  boolean not null default true;
@@ -286,6 +229,66 @@ alter table admins        add column if not exists activo  boolean not null defa
 alter table colegios      add column if not exists activo  boolean not null default true;
 alter table cursos        add column if not exists activo  boolean not null default true;
 alter table estudiantes   add column if not exists activo  boolean not null default true;
+
+-- ============================================================================
+-- 5. HELPERS DE ROL (SECURITY DEFINER — sin recursión de RLS)
+--    ⚠️ language sql valida las tablas referenciadas AL CREAR la función:
+--    deben ir SIEMPRE después de las tablas (el orden anterior al v1 tumbaba
+--    el script con 42P01: relation "admins" does not exist).
+-- ============================================================================
+
+create or replace function fn_rol_actual()
+returns text
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select case
+    when exists (select 1 from admins a      where a.auth_id = auth.uid() and a.activo)  then 'admin'
+    when exists (select 1 from psicologas p  where p.auth_id = auth.uid() and p.activa)  then 'psicologa'
+    when exists (select 1 from facilitadores f where f.auth_id = auth.uid() and f.activo) then 'facilitador'
+    else 'anon'
+  end;
+$$;
+
+-- ¿auth.uid() es lead o co-facilitador de la sesión p_sesion?
+create or replace function fn_facilitador_de_sesion(p_sesion uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from sesiones s
+    where s.id = p_sesion
+      and (
+        s.facilitador_lead_id = auth.uid()
+        or auth.uid() = any (s.co_facilitadores_ids)
+      )
+  );
+$$;
+
+-- ¿auth.uid() es psicóloga (activa) del colegio del curso p_curso?
+-- (colegio_id null = sirve en todos los colegios, caso piloto)
+create or replace function fn_psicologa_de_curso(p_curso uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from psicologas p
+    where p.auth_id = auth.uid()
+      and p.activa
+      and (
+        p.colegio_id is null
+        or p.colegio_id = (select c.colegio_id from cursos c where c.id = p_curso)
+      )
+  );
+$$;
 
 -- ============================================================================
 -- 6. RPC DEL ESTUDIANTE (SECURITY DEFINER — validan el PIN internamente)
