@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { ArrowRight } from "@phosphor-icons/react";
 import {
   Button,
   Input,
@@ -59,9 +61,30 @@ export default function Home() {
         </h1>
         <p className="text-sm text-ink-2">
           Componentes base — espejo de los mockups de Figma. Tipografía Poppins
-          (pendiente de instalar) con fallback Segoe UI.
+          activa por next/font/google.
         </p>
       </header>
+
+      <Link
+        href="/estudiante"
+        className="group flex items-center justify-between gap-4 rounded-2xl bg-navy p-6 shadow-card hover:shadow-modal transition-shadow"
+      >
+        <div className="flex flex-col gap-1">
+          <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-yellow">
+            Sprint 2 · nuevo
+          </p>
+          <p className="text-base font-semibold text-white">
+            Flujo del estudiante — unirse por PIN
+          </p>
+          <p className="text-xs text-tint-navy">
+            PIN de demo: 841279 (abierta) · 240517 (cerrando) · 931126 (terminada)
+          </p>
+        </div>
+        <span className="h-10 px-5 rounded-full bg-yellow text-navy text-sm font-medium inline-flex items-center group-hover:gap-3 gap-2 transition-all">
+          Probar
+          <ArrowRight size={16} weight="bold" />
+        </span>
+      </Link>
 
       <Section title="Logo de marca (brandboard oficial)">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -109,11 +132,14 @@ export default function Home() {
         <p className="text-xs text-ink-2">
           Uso: <code className="text-navy">&lt;Logo /&gt;</code> = variante{" "}
           <code className="text-navy">color</code>, el logo principal para fondos
-          claros (es el default) · <code className="text-navy">variant="dark"</code>{" "}
-          en fondos oscuros (navy, rosa) · <code className="text-navy">variant="light"</code>{" "}
-          mono en claros · <code className="text-navy">variant="yellow"</code> sobre
-          Space Cadet · rose/teal decorativas · <code className="text-navy">isotipo</code>{" "}
-          para el ícono solo.
+          claros (es el default) ·{" "}
+          <code className="text-navy">variant=&quot;dark&quot;</code> en fondos
+          oscuros (navy, rosa) ·{" "}
+          <code className="text-navy">variant=&quot;light&quot;</code> mono en
+          claros ·{" "}
+          <code className="text-navy">variant=&quot;yellow&quot;</code> sobre
+          Space Cadet · rose/teal decorativas ·{" "}
+          <code className="text-navy">isotipo</code> para el ícono solo.
         </p>
       </Section>
 
