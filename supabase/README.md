@@ -36,7 +36,7 @@ Pegar en este orden en **Supabase → Project → SQL Editor → New query → R
  (probable residuo de la versión francesa del instrumento). Se conserva
  verbatim hasta confirmación de ella.
 
-## 3. Crear los usuarios de Supabase Auth
+## 4. Crear los usuarios de Supabase Auth
 
 El estudiante NO tiene cuenta (entra por PIN). Los demás roles sí:
 
@@ -49,10 +49,23 @@ El estudiante NO tiene cuenta (entra por PIN). Los demás roles sí:
 | `admin1@yldc.app` | Admin |
 | `admin2@yldc.app` | Admin |
 
+Son correos PROVISIONALES de demo (nadie está usando ese buzón): con
+**Auto Confirm User ON, Supabase no envía correo alguno** — la cuenta nace
+ya verificada y el buzón ni siquiera necesita existir. El email funciona
+solo como identificador de login, junto a la contraseña que tú definas.
+
+Cuando sepas los correos reales del equipo: se cambian en Auth (Update
+user → email) y aquí en las tablas (`update facilitadores set correo =
+'...' where id = ...`) — o avísale al desarrollador para regenerar el
+seed completo. Para producción se reemplazan por los reales sí o sí.
+
 En **Authentication → Users → Add user → Create new user**: escribir el correo,
 ponle contraseña provisional y deja ON "Auto Confirm User". Repetir por cada fila.
+(Con Auto Confirm OFF Supabase sí intentaría mandar un correo de verificación
+a un buzón que no existe — la cuenta quedaría colgada en "Waiting for
+confirmation"; por eso va ON.)
 
-## 4. Vincular las cuentas Auth con las tablas de rol
+## 5. Vincular las cuentas Auth con las tablas de rol
 
 Las policies de RLS identifican a cada usuario porque `facilitadores.auth_id`,
 `psicologas.auth_id` y `admins.auth_id` guardan el UUID de Auth. Una vez creados
@@ -64,7 +77,7 @@ update psicologas    p set auth_id = u.id from auth.users u where u.email = p.co
 update admins        a set auth_id = u.id from auth.users u where u.email = a.correo;
 ```
 
-## 5. variables para el frontend
+## 6. Variables para el frontend
 
 **Settings → API**: copiar *Project URL* y *anon public key* a `yldc-app/.env.local`:
 
@@ -75,7 +88,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 
 (Ver `.env.example` — no compartir la service role key.)
 
-## 6. Romper una cuenta sin eliminarla (activar/desactivar)
+## 7. Desactivar una cuenta sin eliminarla (activar/desactivar)
 
 ```sql
 update facilitadores set activo = false where correo = 'daniela.restrepo@yldc.app';
