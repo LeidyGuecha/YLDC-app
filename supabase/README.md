@@ -45,7 +45,7 @@ El estudiante NO tiene cuenta (entra por PIN). Los demás roles sí:
 | `maria.torres@yldc.app` | Facilitadora (lead) |
 | `daniela.restrepo@yldc.app` | Facilitadora (co) |
 | `diana.rios@yldc.app` | Psicóloga |
-| `sara.marquez@yldc.app` | Psicóloga practicante |
+| `sara.marquez@yldc.app` | Psicóloga (segunda cuenta demo) |
 | `admin1@yldc.app` | Admin |
 | `admin2@yldc.app` | Admin |
 
