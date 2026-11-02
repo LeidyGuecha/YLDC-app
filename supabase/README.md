@@ -22,6 +22,20 @@ Pegar en este orden en **Supabase → Project → SQL Editor → New query → R
    -- esperado: aptitudes 60 · intereses_actividades 90 · intereses_ocupaciones 90 · personalidad 60
    ```
 
+## 3. Enunciados oficiales del test (Excel de Liliana)
+
+1. Ejecutar `seed_holland_excel.sql` — reemplaza los 300 enunciados del
+ borrador por los **textos verbatim del Excel oficial**
+ (*CUESTIONARIO TIPOLOGÍA HOLLAND.xlsx*), por id.
+ No toca secciones, tipologías, órdenes ni escalas; es idempotente.
+2. El archivo se regenera con
+ `node supabase/tools/generar-seed-holland-excel.mjs`
+ (documentado en la cabecera del script — requiere el xlsx descomprimido
+ en `%TEMP%/hollandxlsx`).
+3. ⚠️ La pregunta 234 apunta a Liliana: "Mi habilidad en francés es:"
+ (probable residuo de la versión francesa del instrumento). Se conserva
+ verbatim hasta confirmación de ella.
+
 ## 3. Crear los usuarios de Supabase Auth
 
 El estudiante NO tiene cuenta (entra por PIN). Los demás roles sí:
