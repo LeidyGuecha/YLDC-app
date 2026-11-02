@@ -66,13 +66,13 @@ on conflict (id) do nothing;
 -- 4. TALLERES (Proyecto de vida — grado 11, sesiones 1/4/5)
 -- ============================================================================
 insert into talleres (id, codigo, titulo, grado, numero_sesion, objetivo) values
-  ('tttttttt-0000-0000-0000-000000000001', 'YC-01',
+  ('11111111-0000-0000-0000-000000000001', 'YC-01',
    'Sesión 1 — Descubriendo mi proyecto de vida', 11, 1,
    'Abrir el ciclo: los jóvenes identifican sueños, expectativas y punto de partida.'),
-  ('tttttttt-0000-0000-0000-000000000004', 'YC-04',
+  ('11111111-0000-0000-0000-000000000004', 'YC-04',
    'Sesión 4 — ¿Cómo vengo? Mi punto de partida con los demás', 11, 4,
    'Trabajar la fotografía de emociones (clima) y la reflexión inicial sobre vínculos.'),
-  ('tttttttt-0000-0000-0000-000000000005', 'YC-05',
+  ('11111111-0000-0000-0000-000000000005', 'YC-05',
    'Sesión 5 — ¿Cómo voy? Revisando mis avances', 11, 5,
    'Reconocer avances y tropiezos desde la actividad trabajada y redactar el estado de ruta.')
 on conflict (id) do nothing;
@@ -82,24 +82,24 @@ on conflict (id) do nothing;
 --    llega con el calendario de talleres de Liliana)
 -- ============================================================================
 insert into preguntas_actividad (id, taller_id, orden, enunciado, tipo, configuracion_json) values
-  ('pppppppp-0000-0000-0000-000000000001', 'tttttttt-0000-0000-0000-000000000004', 1,
+  ('22222222-0000-0000-0000-000000000001', '11111111-0000-0000-0000-000000000004', 1,
    '¿Cómo vienes hoy?', 'seleccion',
    '{"opciones":[{"id":"soleado","texto":"Soleado"},{"id":"nublado","texto":"Nublado"},{"id":"lluvioso","texto":"Lluvioso"},{"id":"tormenta","texto":"Tormenta"}]}'),
-  ('pppppppp-0000-0000-0000-000000000002', 'tttttttt-0000-0000-0000-000000000004', 2,
+  ('22222222-0000-0000-0000-000000000002', '11111111-0000-0000-0000-000000000004', 2,
    'Escribe sobre cómo vienes: ¿qué está pasando en tu vida en este momento?', 'texto',
    '{"min_caracteres":200}'),
-  ('pppppppp-0000-0000-0000-000000000003', 'tttttttt-0000-0000-0000-000000000004', 3,
+  ('22222222-0000-0000-0000-000000000003', '11111111-0000-0000-0000-000000000004', 3,
    'Marca las actividades que hiciste en la sesión', 'checklist',
    '{"opciones":[{"id":"clima","texto":"Marcar mi clima"},{"id":"historia","texto":"Escuchar la historia de otro compañero"},{"id":"reflexion","texto":"Escribir mi reflexión"},{"id":"consejo","texto":"Enviar o recibir un consejo"}]}'),
-  ('pppppppp-0000-0000-0000-000000000004', 'tttttttt-0000-0000-0000-000000000004', 4,
+  ('22222222-0000-0000-0000-000000000004', '11111111-0000-0000-0000-000000000004', 4,
    'Completa la frase: "Hoy me sorprendió que…"', 'frase_a_completar', null),
-  ('pppppppp-0000-0000-0000-000000000005', 'tttttttt-0000-0000-0000-000000000004', 5,
+  ('22222222-0000-0000-0000-000000000005', '11111111-0000-0000-0000-000000000004', 5,
    '¿Cómo voy? ¿Qué te llevaste de la sesión?', 'texto',
    '{"min_caracteres":200}'),
-  ('pppppppp-0000-0000-0000-000000000006', 'tttttttt-0000-0000-0000-000000000001', 1,
+  ('22222222-0000-0000-0000-000000000006', '11111111-0000-0000-0000-000000000001', 1,
    '¿Cómo vienes hoy?', 'seleccion',
    '{"opciones":[{"id":"soleado","texto":"Soleado"},{"id":"nublado","texto":"Nublado"},{"id":"lluvioso","texto":"Lluvioso"},{"id":"tormenta","texto":"Tormenta"}]}'),
-  ('pppppppp-0000-0000-0000-000000000007', 'tttttttt-0000-0000-0000-000000000001', 2,
+  ('22222222-0000-0000-0000-000000000007', '11111111-0000-0000-0000-000000000001', 2,
    'Describe un sueño que tengas para tu vida.', 'texto', '{"min_caracteres":200}')
 on conflict (id) do nothing;
 
@@ -108,41 +108,41 @@ on conflict (id) do nothing;
 -- ============================================================================
 insert into sesiones (id, taller_id, curso_id, facilitador_lead_id, co_facilitadores_ids, pin_acceso, estado, fase_actual) values
   -- 11°-A · Sesión 4 · abierta y en cómo_vengo (la sesión del flujo PIN 1.1–1.10)
-  ('ssssssss-0000-0000-0000-000000000001', 'tttttttt-0000-0000-0000-000000000004',
+  ('33333333-0000-0000-0000-000000000001', '11111111-0000-0000-0000-000000000004',
    'bbbbbbbb-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000001',
    array['ffffffff-0000-0000-0000-000000000002'::uuid], '841279', 'abierta', 'como_vengo'),
   -- 11°-A · Sesión 1 · cerrada_pendiente (falta el comentario de Daniela)
-  ('ssssssss-0000-0000-0000-000000000002', 'tttttttt-0000-0000-0000-000000000001',
+  ('33333333-0000-0000-0000-000000000002', '11111111-0000-0000-0000-000000000001',
    'bbbbbbbb-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000001',
    array['ffffffff-0000-0000-0000-000000000002'::uuid], '240517', 'cerrada_pendiente', 'como_voy'),
   -- 11°-B · Sesión 4 · completada (lead + co comentaron)
-  ('ssssssss-0000-0000-0000-000000000003', 'tttttttt-0000-0000-0000-000000000004',
+  ('33333333-0000-0000-0000-000000000003', '11111111-0000-0000-0000-000000000004',
    'bbbbbbbb-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000001',
    array['ffffffff-0000-0000-0000-000000000002'::uuid], '931126', 'completada', 'como_voy')
 on conflict (id) do nothing;
 
-update sesiones set fecha_inicio = now() - interval '1 day' where id = 'ssssssss-0000-0000-0000-000000000002';
+update sesiones set fecha_inicio = now() - interval '1 day' where id = '33333333-0000-0000-0000-000000000002';
 update sesiones set fecha_inicio = now() - interval '2 day', fecha_cierre = now() - interval '1 day'
-  where id = 'ssssssss-0000-0000-0000-000000000003';
+  where id = '33333333-0000-0000-0000-000000000003';
 
 -- ============================================================================
 -- 7. RESPUESTAS DE EJEMPLO (sesión completada de 11°-B)
 -- ============================================================================
 insert into respuestas (id, estudiante_id, sesion_id, tipo, pregunta_id, contenido_seleccion_json) values
-  ('rrrrrrrr-0000-0000-0000-000000000001', 'eeeeeeee-0000-0000-0000-000000000021', 'ssssssss-0000-0000-0000-000000000003',
-   'como_vengo', 'pppppppp-0000-0000-0000-000000000001', '{"seleccion":"lluvioso"}'),
-  ('rrrrrrrr-0000-0000-0000-000000000002', 'eeeeeeee-0000-0000-0000-000000000022', 'ssssssss-0000-0000-0000-000000000003',
-   'como_vengo', 'pppppppp-0000-0000-0000-000000000001', '{"seleccion":"soleado"}'),
-  ('rrrrrrrr-0000-0000-0000-000000000003', 'eeeeeeee-0000-0000-0000-000000000023', 'ssssssss-0000-0000-0000-000000000003',
-   'como_vengo', 'pppppppp-0000-0000-0000-000000000001', '{"seleccion":"tormenta"}')
+  ('44444444-0000-0000-0000-000000000001', 'eeeeeeee-0000-0000-0000-000000000021', '33333333-0000-0000-0000-000000000003',
+   'como_vengo', '22222222-0000-0000-0000-000000000001', '{"seleccion":"lluvioso"}'),
+  ('44444444-0000-0000-0000-000000000002', 'eeeeeeee-0000-0000-0000-000000000022', '33333333-0000-0000-0000-000000000003',
+   'como_vengo', '22222222-0000-0000-0000-000000000001', '{"seleccion":"soleado"}'),
+  ('44444444-0000-0000-0000-000000000003', 'eeeeeeee-0000-0000-0000-000000000023', '33333333-0000-0000-0000-000000000003',
+   'como_vengo', '22222222-0000-0000-0000-000000000001', '{"seleccion":"tormenta"}')
 on conflict (id) do nothing;
 
 insert into respuestas (id, estudiante_id, sesion_id, tipo, pregunta_id, contenido_texto) values
-  ('rrrrrrrr-0000-0000-0000-000000000011', 'eeeeeeee-0000-0000-0000-000000000021', 'ssssssss-0000-0000-0000-000000000003',
-   'como_vengo', 'pppppppp-0000-0000-0000-000000000002',
+  ('44444444-0000-0000-0000-000000000011', 'eeeeeeee-0000-0000-0000-000000000021', '33333333-0000-0000-0000-000000000003',
+   'como_vengo', '22222222-0000-0000-0000-000000000002',
    'Vengo tranquila pero con muchas preguntas sobre lo que viene después del colegio. A veces siento que todos van con más claridad que yo, y me cuesta apurar ese cambio, pero sigo feliz.'),
-  ('rrrrrrrr-0000-0000-0000-000000000012', 'eeeeeeee-0000-0000-0000-000000000022', 'ssssssss-0000-0000-0000-000000000003',
-   'como_vengo', 'pppppppp-0000-0000-0000-000000000002',
+  ('44444444-0000-0000-0000-000000000012', 'eeeeeeee-0000-0000-0000-000000000022', '33333333-0000-0000-0000-000000000003',
+   'como_vengo', '22222222-0000-0000-0000-000000000002',
    'Vengo motivado porque este año quiero dejar huella en el once. Aunque en casa las cosas están tensas, el fútbol me despeja la cabeza y los amigos me acompañan. Quiero tener claro un plan.')
 on conflict (id) do nothing;
 
@@ -151,21 +151,21 @@ on conflict (id) do nothing;
 -- ============================================================================
 -- cerrada_pendiente: comentó solo el lead (falta Daniela)
 insert into comentarios_grupales (id, sesion_id, facilitador_id, comentario) values
-  ('gggggggg-0000-0000-0000-000000000002', 'ssssssss-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000001',
+  ('55555555-0000-0000-0000-000000000002', '33333333-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000001',
    'El grupo arrancó con buen clima: varios soñaron en voz alta y los papeles quedaron en la muralla del aula. Falta el punto de vista de mi co-facilitadora para cerrar el panorama.')
 on conflict (id) do nothing;
 
 -- completada: comentaron lead y co
 insert into comentarios_grupales (id, sesion_id, facilitador_id, comentario) values
-  ('gggggggg-0000-0000-0000-000000000001', 'ssssssss-0000-0000-0000-000000000003', 'ffffffff-0000-0000-0000-000000000001',
+  ('55555555-0000-0000-0000-000000000001', '33333333-0000-0000-0000-000000000003', 'ffffffff-0000-0000-0000-000000000001',
    'Lluvia, sol y tormenta en la misma aula: el grupo está pasando por capítulos distintos del mismo año. La reflexión escrita mostró honestidad y varios ya nombraron sus miedos.'),
-  ('gggggggg-0000-0000-0000-000000000003', 'ssssssss-0000-0000-0000-000000000003', 'ffffffff-0000-0000-0000-000000000002',
+  ('55555555-0000-0000-0000-000000000003', '33333333-0000-0000-0000-000000000003', 'ffffffff-0000-0000-0000-000000000002',
    'Como co-facilitadora acompañé a los que quedaron callados en la ronda. Recomiendo a la psicóloga mirar de cerca los dos climas de tormenta: hay historias de casa que conviene abrir en conversación individual.')
 on conflict (id) do nothing;
 
 -- comentario individual de la psicóloga (1 por estudiante, UNIQUE)
 insert into comentarios_individuales_psicologa (id, estudiante_id, psicologa_id, comentario) values
-  ('iiiiiiii-0000-0000-0000-000000000001', 'eeeeeeee-0000-0000-0000-000000000021', 'cccccccc-0000-0000-0000-000000000001',
+  ('66666666-0000-0000-0000-000000000001', 'eeeeeeee-0000-0000-0000-000000000021', 'cccccccc-0000-0000-0000-000000000001',
    'Ana está procesando la transición del once con expectativa y algo de ansiedad por compararse. Recomendado: mandato suave de autocuidado y seguirla en la próxima sesión.')
 on conflict (estudiante_id) do nothing;
 

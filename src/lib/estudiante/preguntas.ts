@@ -39,13 +39,13 @@ const OPCIONES_CLIMA: PreguntaOpcion[] = [
 export const BATERIA_FASES: Record<FaseSesion, PreguntaFase[]> = {
   como_vengo: [
     {
-      id: "pppppppp-0000-0000-0000-000000000001",
+      id: "22222222-0000-0000-0000-000000000001",
       tipo: "seleccion",
       enunciado: "¿Cómo vienes hoy?",
       opciones: OPCIONES_CLIMA,
     },
     {
-      id: "pppppppp-0000-0000-0000-000000000002",
+      id: "22222222-0000-0000-0000-000000000002",
       tipo: "texto",
       enunciado:
         "Escribe sobre cómo vienes: ¿qué está pasando en tu vida en este momento?",
@@ -54,7 +54,7 @@ export const BATERIA_FASES: Record<FaseSesion, PreguntaFase[]> = {
   ],
   actividad: [
     {
-      id: "pppppppp-0000-0000-0000-000000000003",
+      id: "22222222-0000-0000-0000-000000000003",
       tipo: "checklist",
       enunciado: "Marca las actividades que hiciste en la sesión",
       opciones: [
@@ -65,7 +65,7 @@ export const BATERIA_FASES: Record<FaseSesion, PreguntaFase[]> = {
       ],
     },
     {
-      id: "pppppppp-0000-0000-0000-000000000004",
+      id: "22222222-0000-0000-0000-000000000004",
       tipo: "frase_a_completar",
       enunciado: "Completa la frase",
       frase: { antes: "Hoy me sorprendió que", despues: "" },
@@ -73,7 +73,7 @@ export const BATERIA_FASES: Record<FaseSesion, PreguntaFase[]> = {
   ],
   como_voy: [
     {
-      id: "pppppppp-0000-0000-0000-000000000005",
+      id: "22222222-0000-0000-0000-000000000005",
       tipo: "texto",
       enunciado: "¿Cómo voy? ¿Qué te llevaste de la sesión?",
       minCaracteres: 200,
