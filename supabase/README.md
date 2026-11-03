@@ -128,6 +128,22 @@ update admins        set activo = false where correo = 'admin2@yldc.app';
 
 (El panel admin hará esto con botón Activar/Desactivar y lo registrará en `audit_log`.)
 
+## 8. Re-corre el schema después de crear los usuarios (antes de probar los paneles)
+
+El `schema.sql` se actualizó con dos piezas que el panel del facilitador
+necesita: los **fixes de RLS** (los policies comparaban IDs de fila de
+`facilitadores` contra UUIDs de Auth — espacios distintos que nunca casaban) y
+la RPC `fn_listar_mis_respuestas_test`. Es idempotente: correrlo de nuevo
+**no borra datos**; solo reemplaza funciones y policies.
+
+1. Menú izquierdo → **SQL Editor** → **New query**.
+2. Copia TODO el contenido de `supabase/schema.sql`, pégalo y pincha **Run**.
+3. Esperado: **Success. No rows returned**.
+
+Solo después de esto el panel (`/facilitador`) lista las sesiones del seed,
+permite elegir co-facilitadoras al crear una sesión y guardar el comentario
+grupal.
+
 ## Cómo protege los datos esta base (repaso rápido)
 
 - Estudiante: escribe solo por RPC (`fn_unirse_sesion`, `fn_guardar_respuesta`,
