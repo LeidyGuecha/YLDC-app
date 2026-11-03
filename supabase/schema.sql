@@ -253,6 +253,10 @@ as $$
 $$;
 
 -- ¿auth.uid() es lead o co-facilitador de la sesión p_sesion?
+-- ⚠️ sesiones.facilitador_lead_id / co_facilitadores_ids guardan ROW id de
+-- facilitadores (FK facilitadores.id); el vínculo con Auth vive en
+-- facilitadores.auth_id. La comparación directa s.facilitador_lead_id =
+-- auth.uid() mezclaba espacios distintos (fila vs Auth) y jamás casaba.
 create or replace function fn_facilitador_de_sesion(p_sesion uuid)
 returns boolean
 language sql
@@ -261,12 +265,13 @@ stable
 set search_path = public
 as $$
   select exists (
-    select 1 from sesiones s
-    where s.id = p_sesion
-      and (
-        s.facilitador_lead_id = auth.uid()
-        or auth.uid() = any (s.co_facilitadores_ids)
-      )
+    select 1 from facilitadores f
+    where (
+          f.id = (select s.facilitador_lead_id from sesiones s where s.id = p_sesion)
+          or f.id = any(select s.co_facilitadores_ids from sesiones s where s.id = p_sesion)
+        )
+      and f.auth_id = auth.uid()
+      and f.activo
   );
 $$;
 
@@ -664,12 +669,14 @@ create policy lectura_preguntas_test on preguntas_test_holland
   for select to anon, authenticated using (true);
 
 -- ── usuarios por rol: ver/editar con patrón activar-desactivar (sin eliminar)
--- facilitadores: psicólogas y admin gestionan (opción A del panel); sí mismo se lee
+-- facilitadores: psicóloga/admin gestionan (opción A del panel); sí mismo se lee;
+-- + lectura por facilitadores: el lead necesita elegir co-facilitadores al crear
+-- sesiones (solo lectura básica — el update sigue cerrado para ellos)
 drop policy if exists facilitadores_admin_psico_lectura on facilitadores;
 create policy facilitadores_admin_psico_lectura on facilitadores
   for select to authenticated
   using (
-    fn_rol_actual() in ('admin', 'psicologa')
+    fn_rol_actual() in ('admin', 'psicologa', 'facilitador')
     or auth_id = auth.uid()
   );
 
@@ -721,8 +728,7 @@ create policy estudiantes_rol_lectura on estudiantes
     or exists (
       select 1 from sesiones s
       where s.curso_id = estudiantes.curso_id
-        and (s.facilitador_lead_id = auth.uid()
-             or auth.uid() = any (s.co_facilitadores_ids))
+        and fn_facilitador_de_sesion(s.id)
     )
   );
 
@@ -752,7 +758,11 @@ create policy sesiones_crear_facilitador on sesiones
   for insert to authenticated
   with check (
     fn_rol_actual() = 'facilitador'
-    and facilitador_lead_id = auth.uid()
+    and exists (
+      select 1 from facilitadores f
+      where f.auth_id = auth.uid() and f.activo
+        and facilitador_lead_id = f.id
+    )
   );
 
 drop policy if exists sesiones_actualizar_participes on sesiones;
@@ -791,22 +801,34 @@ drop policy if exists comentarios_grupales_facilitador on comentarios_grupales;
 create policy comentarios_grupales_facilitador on comentarios_grupales
   for insert to authenticated
   with check (
-    facilitador_id = auth.uid()
+    exists (
+      select 1 from facilitadores f
+      where f.auth_id = auth.uid() and f.id = facilitador_id
+    )
     and fn_facilitador_de_sesion(sesion_id)
   );
 
 drop policy if exists comentarios_grupales_edita_autor on comentarios_grupales;
 create policy comentarios_grupales_edita_autor on comentarios_grupales
   for update to authenticated
-  using (facilitador_id = auth.uid())
-  with check (facilitador_id = auth.uid());
+  using (exists (
+          select 1 from facilitadores f
+          where f.auth_id = auth.uid() and f.id = facilitador_id
+        ))
+  with check (exists (
+          select 1 from facilitadores f
+          where f.auth_id = auth.uid() and f.id = facilitador_id
+        ));
 
 -- ── comentarios individuales de psicóloga
 drop policy if exists comentarios_psicologa_lectura on comentarios_individuales_psicologa;
 create policy comentarios_psicologa_lectura on comentarios_individuales_psicologa
   for select to authenticated
   using (
-    psicologa_id = auth.uid()
+    exists (
+      select 1 from psicologas p
+      where p.auth_id = auth.uid() and p.id = psicologa_id
+    )
     or fn_rol_actual() = 'admin'
     or (fn_rol_actual() = 'psicologa' and fn_psicologa_de_curso(
           (select e.curso_id from estudiantes e where e.id = estudiante_id)))
@@ -816,11 +838,17 @@ drop policy if exists comentarios_psicologa_edita on comentarios_individuales_ps
 create policy comentarios_psicologa_edita on comentarios_individuales_psicologa
   for all to authenticated
   using (
-    psicologa_id = auth.uid()
+    exists (
+      select 1 from psicologas p
+      where p.auth_id = auth.uid() and p.id = psicologa_id
+    )
     or fn_rol_actual() = 'admin'
   )
   with check (
-    psicologa_id = auth.uid()
+    exists (
+      select 1 from psicologas p
+      where p.auth_id = auth.uid() and p.id = psicologa_id
+    )
     or fn_rol_actual() = 'admin'
   );
 
