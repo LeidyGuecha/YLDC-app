@@ -287,23 +287,32 @@ function parsearResultado(data: unknown): ResultadoHolland {
 /* ───────────────── Mensajes amables para la UI ───────────────── */
 
 export function mensajeAmable(error: unknown): string {
-  if (error instanceof ErrorEstudiante) {
-    switch (error.code) {
-      case "SIN_CONFIGURACION":
-        return "Falta configurar las credenciales de Supabase en .env.local.";
-      case "PIN_INVALIDO":
-        return "Ese PIN no existe o ya se usó en otra sesión. Pídele el PIN actual a tu facilitador.";
-      case "SESION_NO_ABIERTA":
-        return "Esta sesión ya se cerró. Pídele el PIN nuevo a tu facilitador.";
-      case "NOMBRE_AMBIGUO":
-        return "Hay más de un estudiante con ese nombre. Escribe tu documento para confirmar que eres tú.";
-      case "FALTAN_PREGUNTAS":
-        return "Aún faltan preguntas del test por responder.";
-      case "RED":
-        return "No pudimos conectar. Revisa tu internet e intenta otra vez.";
-      default:
-        return error.message || "Algo salió mal. Intenta de nuevo.";
-    }
+  // cubre tanto ErrorEstudiante como ErrorPanelo (u otros errores con `code`)
+  const code =
+    error instanceof Error && "code" in error && typeof error.code === "string"
+      ? error.code
+      : undefined;
+  switch (code) {
+    case "SIN_CONFIGURACION":
+      return "Falta configurar las credenciales de Supabase en .env.local.";
+    case "PIN_INVALIDO":
+      return "Ese PIN no existe o ya se usó en otra sesión. Pídele el PIN actual a tu facilitador.";
+    case "SESION_NO_ABIERTA":
+      return "Esta sesión ya se cerró. Pídele el PIN nuevo a tu facilitador.";
+    case "NOMBRE_AMBIGUO":
+      return "Hay más de un estudiante con ese nombre. Escribe tu documento para confirmar que eres tú.";
+    case "FALTAN_PREGUNTAS":
+      return "Aún faltan preguntas del test por responder.";
+    case "CREDENCIALES_INVALIDAS":
+      return "Correo o contraseña incorrectos. Revísalos e intenta de nuevo.";
+    case "SIN_ROL_VINCULADO":
+      return "La cuenta ingresó bien pero no está vinculada a un rol (corre el paso 5 del README de Supabase).";
+    case "CUENTA_DESACTIVADA":
+      return "Tu cuenta está desactivada. Pídele a la administradora que la reactive.";
+    case "RED":
+      return "No pudimos conectar. Revisa tu internet e intenta otra vez.";
+    default:
+      if (error instanceof Error && error.message) return error.message;
+      return "Algo salió mal. Intenta de nuevo.";
   }
-  return "Algo salió mal. Intenta de nuevo.";
 }
