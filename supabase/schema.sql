@@ -972,6 +972,14 @@ begin
 exception when duplicate_object then null;
 end $$;
 
+-- altas nuevas de estudiantes del curso → el monitor del facilitador las
+-- incorpora en vivo (la fila la crea fn_unirse_sesion por registro directo)
+do $$
+begin
+  alter publication supabase_realtime add table estudiantes;
+exception when duplicate_object then null;
+end $$;
+
 -- ============================================================================
 -- FIN DEL SCHEMA — ejecutar después supabase/seed.sql
 -- ============================================================================

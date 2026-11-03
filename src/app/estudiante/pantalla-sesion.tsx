@@ -28,6 +28,7 @@ import {
   mockResetearSesion,
 } from "@/lib/estudiante/mock";
 import { borrarContexto, leerContexto } from "@/lib/estudiante/sesion-local";
+import { getSupabase } from "@/lib/supabase/client";
 import {
   BATERIA_FASES,
   ETIQUETA_FASE,
@@ -132,6 +133,30 @@ function CuerpoSesion({
       quitarSimulador?.();
     };
   }, [refrescar]);
+
+  // PRESENCIA: la estudiante se marca en el canal de la sesión para que el
+  // monitor del facilitador la muestre como conectada (mockup 2.4).
+  // La key de presencia es su id: dos pestañas de la misma estudiante no duplican.
+  useEffect(() => {
+    if (!supabaseConfigurado) return;
+    const sb = getSupabase();
+    if (!sb) return;
+    const canal = sb.channel(`sesion:${contexto.sesionId}`, {
+      config: { presence: { key: contexto.estudianteId } },
+    });
+    canal.subscribe((estado) => {
+      if (estado === "SUBSCRIBED") {
+        void canal.track({
+          nombre: contexto.nombre,
+          estudiante_id: contexto.estudianteId,
+        });
+      }
+    });
+    return () => {
+      void canal.untrack();
+      void sb.removeChannel(canal);
+    };
+  }, [contexto.sesionId, contexto.estudianteId, contexto.nombre]);
 
   // respuestas propias (al unirse y cuando cambia la fase)
   useEffect(() => {

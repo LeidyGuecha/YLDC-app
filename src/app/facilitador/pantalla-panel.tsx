@@ -438,6 +438,7 @@ function DetalleSesion({
   const [accionando, setAccionando] = useState(false);
   const [detalleDe, setDetalleDe] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const [enLinea, setEnLinea] = useState<{ id: string; nombre: string }[]>([]);
 
   // Carga (y recarga) del monitoreo + comentarios al entrar a la sesión
   useEffect(() => {
@@ -493,6 +494,11 @@ function DetalleSesion({
         .then((co) => setComentarios(co))
         .catch(() => {});
     };
+    const refrescarEstudiantes = () => {
+      void listarEstudiantesDeCurso(sesion.cursoId)
+        .then((es) => setEstudiantes(es))
+        .catch(() => {});
+    };
     const canal = sb
       .channel(`panel-sesion-${id}`)
       .on(
@@ -515,7 +521,36 @@ function DetalleSesion({
         { event: "*", schema: "public", table: "comentarios_grupales", filter: `sesion_id=eq.${id}` },
         refrescarComentarios,
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "estudiantes", filter: `curso_id=eq.${sesion.cursoId}` },
+        refrescarEstudiantes,
+      )
       .subscribe();
+    return () => {
+      void sb.removeChannel(canal);
+    };
+  }, [sesion.id, sesion.cursoId]);
+
+  // PRESENCIA: quiénes tienen la pantalla del estudiante abierta ahora mismo.
+  // La estudiante se registra con canal.track (key = su id) y decae al cerrar.
+  useEffect(() => {
+    if (!supabaseConfigurado) return;
+    const sb = getSupabase();
+    if (!sb) return;
+    const id = sesion.id;
+    const canal = sb.channel(`sesion:${id}`);
+    canal.on("presence", { event: "sync" }, () => {
+      const estado = canal.presenceState() as unknown as Record<
+        string,
+        { nombre: string; estudiante_id: string }[]
+      >;
+      const lista = Object.values(estado).flatMap((presencias) =>
+        presencias.map((p) => ({ id: p.estudiante_id, nombre: p.nombre })),
+      );
+      setEnLinea(lista);
+    });
+    canal.subscribe();
     return () => {
       void sb.removeChannel(canal);
     };
@@ -722,6 +757,17 @@ function DetalleSesion({
           </h3>
           <Badge variant="pinkSoft" dot>tiempo real</Badge>
         </div>
+
+        {enLinea.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-medium uppercase tracking-widest text-teal">
+              Conectadas ahora:
+            </span>
+            {enLinea.map((e) => (
+              <Badge key={e.id} variant="teal" dot>{e.nombre}</Badge>
+            ))}
+          </div>
+        )}
 
         {estudiantes.length === 0 ? (
           <p className="text-xs text-ink-2">
