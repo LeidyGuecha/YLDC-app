@@ -722,6 +722,12 @@ drop policy if exists catalogo_lectura_publica on cursos;
 create policy catalogo_lectura_publica on cursos
   for select to anon, authenticated using (true);
 
+-- el admin crea cursos (p. ej. el 11° del año nuevo) para las cargas de Excel
+drop policy if exists cursos_insert_admin on cursos;
+create policy cursos_insert_admin on cursos
+  for insert to authenticated
+  with check (fn_rol_actual() = 'admin');
+
 drop policy if exists catalogo_lectura_publica on talleres;
 create policy catalogo_lectura_publica on talleres
   for select to anon, authenticated using (true);

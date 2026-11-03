@@ -122,6 +122,24 @@ export default function Home() {
             <ArrowRight size={14} weight="bold" />
           </span>
         </Link>
+
+        <Link
+          href="/admin"
+          className="group flex items-center justify-between gap-4 rounded-2xl bg-yellow p-5 shadow-card hover:shadow-modal transition-shadow"
+        >
+          <div className="flex flex-col gap-1">
+            <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-navy">
+              Panel del admin
+            </p>
+            <p className="text-sm font-semibold text-navy">
+              Gestiona cuentas, carga estudiantes y audita la actividad
+            </p>
+          </div>
+          <span className="h-9 px-4 rounded-full bg-navy text-white text-sm font-medium inline-flex items-center group-hover:gap-3 gap-2 transition-all">
+            Entrar
+            <ArrowRight size={14} weight="bold" />
+          </span>
+        </Link>
       </div>
 
       <Section title="Logo de marca (brandboard oficial)">
