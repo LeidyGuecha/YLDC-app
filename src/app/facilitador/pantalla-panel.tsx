@@ -173,7 +173,6 @@ export function PantallaPanelFacilitador() {
       const nueva = await crearSesion({
         tallerId: tallerSel,
         cursoId: cursoSel,
-        leadId: perfil.id,
         coFacilitadoresIds: coSel,
       });
       setSesiones(await listarMisSesiones());

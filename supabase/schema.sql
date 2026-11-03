@@ -630,6 +630,69 @@ end;
 $$;
 
 -- ============================================================================
+-- RPC DEL FACILITADOR (SECURITY DEFINER — la identidad viene del JWT de Auth)
+-- ============================================================================
+
+-- Crear sesión: valida rol, resuelve la fila del lead por auth_id y genera
+-- el PIN con reintento (columna unique). Devuelve la fila nueva como json.
+create or replace function fn_crear_sesion_facilitador(
+  p_taller_id uuid,
+  p_curso_id uuid,
+  p_co_facilitadores uuid[] default '{}'
+)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_lead uuid;
+  v_pin text;
+  v_fila sesiones%rowtype;
+  v_intentos int := 0;
+begin
+  if fn_rol_actual() <> 'facilitador' then
+    raise exception 'Solo una facilitadora activa puede crear sesiones';
+  end if;
+
+  select f.id into v_lead
+    from facilitadores f
+    where f.auth_id = auth.uid() and f.activo
+    limit 1;
+  if v_lead is null then
+    raise exception 'No se encontró tu fila de facilitadora (auth_id sin vincular)';
+  end if;
+
+  loop
+    v_pin := lpad((floor(random() * 1000000))::int::text, 6, '0');
+    begin
+      insert into sesiones (taller_id, curso_id, facilitador_lead_id,
+                            co_facilitadores_ids, pin_acceso)
+      values (p_taller_id, p_curso_id, v_lead, p_co_facilitadores, v_pin)
+      returning * into v_fila;
+      exit;
+    exception when unique_violation then
+      v_intentos := v_intentos + 1;
+      if v_intentos >= 6 then
+        raise exception 'No se pudo generar un PIN único, intenta de nuevo';
+      end if;
+    end;
+  end loop;
+
+  return json_build_object(
+    'id',           v_fila.id,
+    'taller_id',    v_fila.taller_id,
+    'curso_id',     v_fila.curso_id,
+    'lead_id',      v_fila.facilitador_lead_id,
+    'co_ids',       to_json(v_fila.co_facilitadores_ids),
+    'pin_acceso',   v_fila.pin_acceso,
+    'estado',       v_fila.estado,
+    'fase_actual',  v_fila.fase_actual
+  );
+end;
+$$;
+
+-- ============================================================================
 -- 7. ROW LEVEL SECURITY
 -- ============================================================================
 

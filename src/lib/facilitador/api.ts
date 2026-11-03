@@ -135,69 +135,51 @@ export async function listarMisSesiones(): Promise<SesionPanel[]> {
 export async function crearSesion(opciones: {
   tallerId: string;
   cursoId: string;
-  leadId: string;
   coFacilitadoresIds: string[];
 }): Promise<SesionPanel> {
   const sb = asegurarSB();
-  // PIN único (check unique en pin_acceso): se randomiza y reintenta
-  for (let intento = 0; intento < 6; intento++) {
-    const pin = String(Math.floor(Math.random() * 1_000_000)).padStart(6, "0");
-    const { data, error } = await sb
-      .from("sesiones")
-      .insert({
-        taller_id: opciones.tallerId,
-        curso_id: opciones.cursoId,
-        facilitador_lead_id: opciones.leadId,
-        co_facilitadores_ids: opciones.coFacilitadoresIds,
-        pin_acceso: pin,
-        estado: "abierta",
-        fase_actual: "como_vengo",
-      })
-      .select("*")
-      .single();
+  // La creación pasa por RPC SECURITY DEFINER: valida el rol, resuelve la
+  // fila del lead por auth_id y genera el PIN con reintentos dentro de la BD.
+  const { data, error } = await sb.rpc("fn_crear_sesion_facilitador", {
+    p_taller_id: opciones.tallerId,
+    p_curso_id: opciones.cursoId,
+    p_co_facilitadores: opciones.coFacilitadoresIds,
+  });
+  if (error) throw new ErrorPanelo("OTRO", error.message);
 
-    if (!error) {
-      const r = data as {
-        id: string;
-        taller_id: string;
-        curso_id: string;
-        facilitador_lead_id: string;
-        co_facilitadores_ids: string[];
-        pin_acceso: string;
-        estado: EstadoSesionPanel;
-        fase_actual: FaseSesionPanel;
-        fecha_inicio: string | null;
-        fecha_cierre: string | null;
-        creado_en: string;
-      };
-      // títulos/etiquetas se resuelven con una relectura embebida
-      const sesiones = await listarMisSesiones();
-      return (
-        sesiones.find((s) => s.id === r.id) ?? {
-          id: r.id,
-          tallerId: r.taller_id,
-          cursoId: r.curso_id,
-          tallerCodigo: "",
-          tallerTitulo: "",
-          numeroSesion: 0,
-          cursoEtiqueta: etiquetaCurso(0, r.curso_id),
-          colegioNombre: "",
-          leadId: r.facilitador_lead_id,
-          coFacilitadoresIds: r.co_facilitadores_ids ?? [],
-          pin: r.pin_acceso,
-          estado: r.estado,
-          faseActual: r.fase_actual,
-          fechaInicio: r.fecha_inicio,
-          fechaCierre: r.fecha_cierre,
-          creadoEn: r.creado_en,
-        }
-      );
+  const d = data as unknown as {
+    id: string;
+    taller_id: string;
+    curso_id: string;
+    lead_id: string;
+    co_ids: string[];
+    pin_acceso: string;
+    estado: EstadoSesionPanel;
+    fase_actual: FaseSesionPanel;
+  };
+
+  // títulos/etiquetas se resuelven con una relectura embebida
+  const sesiones = await listarMisSesiones();
+  return (
+    sesiones.find((s) => s.id === d.id) ?? {
+      id: d.id,
+      tallerId: d.taller_id,
+      cursoId: d.curso_id,
+      tallerCodigo: "",
+      tallerTitulo: "",
+      numeroSesion: 0,
+      cursoEtiqueta: etiquetaCurso(0, d.curso_id),
+      colegioNombre: "",
+      leadId: d.lead_id,
+      coFacilitadoresIds: d.co_ids ?? [],
+      pin: d.pin_acceso,
+      estado: d.estado,
+      faseActual: d.fase_actual,
+      fechaInicio: null,
+      fechaCierre: null,
+      creadoEn: new Date().toISOString(),
     }
-
-    const duplicado = error.message.toLowerCase().includes("duplicate key");
-    if (!duplicado || intento === 5) throw new ErrorPanelo("OTRO", error.message);
-  }
-  throw new ErrorPanelo("OTRO", "No se pudo generar un PIN único");
+  );
 }
 
 export async function cambiarFase(
