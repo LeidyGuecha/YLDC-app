@@ -59,23 +59,53 @@ user → email) y aquí en las tablas (`update facilitadores set correo =
 '...' where id = ...`) — o avísale al desarrollador para regenerar el
 seed completo. Para producción se reemplazan por los reales sí o sí.
 
-En **Authentication → Users → Add user → Create new user**: escribir el correo,
-ponle contraseña provisional y deja ON "Auto Confirm User". Repetir por cada fila.
-(Con Auto Confirm OFF Supabase sí intentaría mandar un correo de verificación
-a un buzón que no existe — la cuenta quedaría colgada en "Waiting for
-confirmation"; por eso va ON.)
+### Cómo crearlos (interfaz de Supabase, sin SQL)
+
+1. Menú izquierdo → **Authentication** (icono de llave) → pestaña **Users**.
+2. Botón arriba a la derecha **Add user** → opción **Create new user**.
+3. En la ventana que abre:
+   - *Email*: escribir el correo de la tabla (ej. `maria.torres@yldc.app`).
+   - *Password*: desmarca **Auto-generate password** (si viene marcada) y
+    escribe tú mismo una contraseña que recuerdes (ej. `YldcDemo2026!`).
+   - Deja **encendido** el interruptor **Auto Confirm User**.
+4. Pincha **Create**. Al terminar verás 6 filas en la lista con la etiqueta
+  verde **Confirmed**.
+5. Si por descuido alguna aparece como *Waiting for confirmation* es porque
+  quedó con Auto Confirm apagado: elimínala y créala de nuevo con el
+  interruptor encendido.
 
 ## 5. Vincular las cuentas Auth con las tablas de rol
 
-Las policies de RLS identifican a cada usuario porque `facilitadores.auth_id`,
-`psicologas.auth_id` y `admins.auth_id` guardan el UUID de Auth. Una vez creados
-los 6 usuarios, ejecuta esta consulta y listo:
+**¿Por qué existen este paso?** Las tablas `facilitadores`, `psicologas` y
+`admins` aún no saben a qué cuenta de Auth pertenece cada fila. La app
+(for RLS) identifica a cada usuario comparando su UUID de Auth con la
+columna `auth_id`. Este paso copia esos UUID — y los empareja SOLO por el
+correo, no hay que copiar nada a mano.
+
+### Cómo ejecutarlo (SQL Editor)
+
+1. Menú izquierdo → **SQL Editor** → botón **New query**.
+2. Pega estas 3 líneas y pincha **Run**:
 
 ```sql
 update facilitadores f set auth_id = u.id from auth.users u where u.email = f.correo;
 update psicologas    p set auth_id = u.id from auth.users u where u.email = p.correo;
 update admins        a set auth_id = u.id from auth.users u where u.email = a.correo;
 ```
+
+3. Resultado esperado: **Success. No rows returned**.
+4. Verificación (pega en otra New query y Run). Deben salir **6 filas,
+  cada una con su UUID** en auth_id (nunca vacío):
+
+```sql
+select 'facilitador' rol, correo, auth_id from facilitadores
+union all select 'psicologa', correo, auth_id from psicologas
+union all select 'admin', correo, auth_id from admins;
+```
+
+5. Si alguna fila sale con `auth_id` vacío, el correo de la tabla difiere del
+  de Auth (una letra de más/menos): corrige el `correo` de la tabla o el
+  Email del usuario en Auth y vuelve a correr el update.
 
 ## 6. Variables para el frontend
 
