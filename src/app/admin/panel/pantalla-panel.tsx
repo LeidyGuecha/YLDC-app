@@ -18,6 +18,7 @@ import {
   listarFacilitadoras,
   listarPsicologas,
 } from "@/lib/admin/api";
+import { descargarPlantillaEstudiantes } from "@/lib/admin/plantilla";
 import type {
   CuentaAdmin,
   CuentaFacilitadora,
@@ -528,7 +529,8 @@ function FormularioCrear({
 
 /* ───────────────── Pestaña Estudiantes ───────────────── */
 
-/** Parsea el lote pegado: una línea por estudiante «Nombre;TI» (o con coma). */
+/** Parsea el lote pegado: una línea por estudiante «Nombre;TI»
+ *  (acepta punto y coma, tabulaciones de Excel o coma como separador). */
 function parsearLote(texto: string): {
   nombreCompleto: string;
   ti: string | null;
@@ -537,7 +539,11 @@ function parsearLote(texto: string): {
   for (const linea of texto.split(/\r?\n/)) {
     const t = linea.trim();
     if (!t) continue;
-    const partes = t.includes(";") ? t.split(";") : t.split(",");
+    const partes = t.includes(";")
+      ? t.split(";")
+      : t.includes("\t")
+        ? t.split("\t")
+        : t.split(",");
     const nombre = (partes[0] ?? "").trim();
     if (!nombre) continue;
     const ti = (partes[1] ?? "").trim() || null;
@@ -565,6 +571,7 @@ function PanelEstudiantes({
   // carga del lote
   const [lote, setLote] = useState("");
   const [cargandoLote, setCargandoLote] = useState(false);
+  const [descargando, setDescargando] = useState(false);
   const [resultado, setResultado] = useState<{
     creados: number;
     omitidos: number;
@@ -742,16 +749,33 @@ function PanelEstudiantes({
       {curso && (
         <>
           <div className="bg-white rounded-2xl shadow-card p-5 flex flex-col gap-3">
-            <div>
-              <h2 className="text-sm font-bold text-navy">
-                Cargar estudiantes — {curso.etiqueta} · {curso.colegioNombre}
-              </h2>
-              <p className="text-[11px] text-ink-2">
-                Pega la lista del Excel: una línea por estudiante con{" "}
-                <span className="font-mono text-navy">Nombre;TI</span> (el TI
-                es opcional; también acepta coma como separador). Los
-                duplicados del curso o del lote se omiten solos.
-              </p>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h2 className="text-sm font-bold text-navy">
+                  Cargar estudiantes — {curso.etiqueta} · {curso.colegioNombre}
+                </h2>
+                <p className="text-[11px] text-ink-2">
+                  Pega la lista del Excel: una línea por estudiante con{" "}
+                  <span className="font-mono text-navy">Nombre;TI</span> (el TI
+                  es opcional; también acepta coma o el pegado de Excel). Los
+                  duplicados del curso o del lote se omiten solos.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setDescargando(true);
+                  void descargarPlantillaEstudiantes();
+                  // la descarga es local: el spinner es solo cosmético
+                  setTimeout(() => setDescargando(false), 600);
+                }}
+                disabled={descargando}
+                className="h-8 px-3 shrink-0 rounded-lg border border-teal text-teal text-xs font-medium inline-flex items-center gap-1.5 hover:bg-tint-teal disabled:opacity-40 cursor-pointer"
+              >
+                {descargando ? (
+                  <SpinnerGap size={12} className="animate-spin" />
+                ) : null}
+                Descargar plantilla (.xlsx)
+              </button>
             </div>
 
             <textarea
