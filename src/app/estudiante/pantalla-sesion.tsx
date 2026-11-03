@@ -13,7 +13,7 @@ import {
   Lightning,
   ArrowRight,
 } from "@phosphor-icons/react";
-import { Badge, Logo } from "@/components/ui";
+import { Badge, Logo, Stepper } from "@/components/ui";
 import {
   listarMisRespuestas,
   mensajeAmable,
@@ -289,20 +289,8 @@ function FaseActiva({
 
   return (
     <section className="flex flex-col gap-5">
-      {/* progresión de fases — pequeña y silenciosa */}
-      <div className="flex items-center gap-2" aria-label={`Fase ${indice + 1} de 3`}>
-        {ORDEN_FASES.map((f, i) => (
-          <div
-            key={f}
-            className={`h-1.5 flex-1 rounded-full transition-colors ${
-              i < indice ? "bg-teal" : i === indice ? "bg-yellow" : "bg-platinum"
-            }`}
-          />
-        ))}
-        <span className="text-xs text-ink-2 whitespace-nowrap ml-2">
-          Fase {indice + 1}/3 · {ETIQUETA_FASE[fase]}
-        </span>
-      </div>
+      {/* progresión de fases — barrita del diseño (dots + labels) */}
+      <Stepper current={indice as 0 | 1 | 2} />
 
       {preguntas.map((p) => (
         <PreguntaPiloto

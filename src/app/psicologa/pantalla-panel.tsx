@@ -8,7 +8,7 @@ import {
   SignOut,
   SpinnerGap,
 } from "@phosphor-icons/react";
-import { Badge, Logo } from "@/components/ui";
+import { Badge, Logo, ModalConfirmar, Vacio } from "@/components/ui";
 import { cerrarSesion, miPerfil } from "@/lib/psicologa/auth";
 import {
   listarCursosPsicologa,
@@ -86,6 +86,7 @@ export function PantallaPanelPsicologa() {
   const [cargando, setCargando] = useState(true);
 
   const [cursoSel, setCursoSel] = useState<string | null>(null);
+  const [preguntarSalida, setPreguntarSalida] = useState(false);
 
   useEffect(() => {
     if (!supabaseConfigurado) return;
@@ -153,13 +154,28 @@ export function PantallaPanelPsicologa() {
             {perfil.colegioNombre && ` · ${perfil.colegioNombre}`}
           </p>
           <button
-            onClick={alSalir}
+            onClick={() => setPreguntarSalida(true)}
             className="h-8 px-3 rounded-lg border border-stroke text-xs text-ink-2 inline-flex items-center gap-1.5 hover:border-pink hover:text-pink cursor-pointer"
           >
             <SignOut size={13} /> Salir
           </button>
         </div>
       </header>
+
+      {/* Confirmación de salida (¿Salimos del panel?) */}
+      <ModalConfirmar
+        abierto={preguntarSalida}
+        titulo="¿Salir del panel?"
+        texto="Cierra tu sesión aquí. Para volver necesitarás tu correo y contraseña."
+        etiquetaNo="Me quedo"
+        etiquetaSi="Sí, salir"
+        peligro
+        alConfirmar={() => {
+          setPreguntarSalida(false);
+          void alSalir();
+        }}
+        alCancelar={() => setPreguntarSalida(false)}
+      />
 
       {error && (
         <p className="text-xs text-pink bg-tint-pink rounded-lg px-3 py-2">
@@ -188,9 +204,12 @@ export function PantallaPanelPsicologa() {
 
           {cursos.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-card p-8 text-center">
-              <p className="text-sm text-ink-2">
-                Aún no hay cursos activos asociados a tu cuenta.
-              </p>
+              <Vacio
+                titulo="Nada acá todavía"
+                texto="Cuando el colegio registre los cursos y el equipo te conecte, aparecerán aquí para que follows tu acompañamiento."
+                etiquetaAccion="Volver a cargar"
+                alAccion={() => window.location.reload()}
+              />
             </div>
           ) : (
             <div className="grid gap-3">

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, SignOut, SpinnerGap } from "@phosphor-icons/react";
-import { Badge, Logo } from "@/components/ui";
+import { Badge, Logo, ModalConfirmar, Vacio } from "@/components/ui";
 import { cerrarSesion, miPerfil } from "@/lib/admin/auth";
 import {
   cambiarCuenta,
@@ -69,6 +69,7 @@ export function PantallaPanelAdmin() {
   const router = useRouter();
   const [perfil, setPerfil] = useState<PerfilAdmin | null>(null);
   const [tab, setTab] = useState<Tab>("cuentas");
+  const [preguntarSalida, setPreguntarSalida] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
 
@@ -132,13 +133,28 @@ export function PantallaPanelAdmin() {
         <div className="flex items-center gap-3">
           <p className="text-xs text-ink-2">{perfil.nombreCompleto}</p>
           <button
-            onClick={alSalir}
+            onClick={() => setPreguntarSalida(true)}
             className="h-8 px-3 rounded-lg border border-stroke text-xs text-ink-2 inline-flex items-center gap-1.5 hover:border-pink hover:text-pink cursor-pointer"
           >
             <SignOut size={13} /> Salir
           </button>
         </div>
       </header>
+
+      {/* Confirmación de salida (¿Salimos del panel?) */}
+      <ModalConfirmar
+        abierto={preguntarSalida}
+        titulo="¿Salir del panel?"
+        texto="Cierra tu sesión aquí. Para volver necesitarás tu correo y contraseña."
+        etiquetaNo="Me quedo"
+        etiquetaSi="Sí, salir"
+        peligro
+        alConfirmar={() => {
+          setPreguntarSalida(false);
+          void alSalir();
+        }}
+        alCancelar={() => setPreguntarSalida(false)}
+      />
 
       {error && (
         <p className="text-xs text-pink bg-tint-pink rounded-lg px-3 py-2">
@@ -711,9 +727,13 @@ function PanelEstudiantes({
             </button>
           ))}
           {cursos.length === 0 && (
-            <p className="text-xs text-ink-2">
-              Aún no hay cursos. Crea el primero arriba.
-            </p>
+            <div className="bg-white rounded-2xl shadow-card p-4 text-center">
+              <Vacio
+                compacto
+                titulo="Nada acá todavía"
+                texto="Crea el primer curso con el formulario de arriba y luego cárgale estudiantes."
+              />
+            </div>
           )}
         </div>
       </div>
@@ -851,7 +871,10 @@ function PanelHistorial({
         </p>
       ) : entradas.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-card p-8 text-center">
-          <p className="text-sm text-ink-2">Aún no hay actividad registrada.</p>
+          <Vacio
+            titulo="Nada acá todavía"
+            texto="Aquí aparece el rastro de cada acción del panel: crear cuentas, cambiar estados, cargar estudiantes…"
+          />
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-card p-5 flex flex-col">

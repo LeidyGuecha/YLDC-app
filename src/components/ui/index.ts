@@ -6,4 +6,6 @@ export { Card } from "./card";
 export { Checkbox } from "./checkbox";
 export { Tooltip } from "./tooltip";
 export { Stepper } from "./stepper";
+export { ModalConfirmar } from "./modal";
+export { Vacio } from "./vacio";
 export { Logo, type LogoVariant } from "./logo";

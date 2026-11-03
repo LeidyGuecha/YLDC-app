@@ -11,7 +11,7 @@ import {
   SpinnerGap,
   X,
 } from "@phosphor-icons/react";
-import { Badge, Logo } from "@/components/ui";
+import { Badge, Logo, ModalConfirmar, Vacio } from "@/components/ui";
 import { cerrarSesion, miPerfil } from "@/lib/facilitador/auth";
 import {
   cambiarEstado,
@@ -112,6 +112,7 @@ export function PantallaPanelFacilitador() {
   const [cursoSel, setCursoSel] = useState("");
   const [coSel, setCoSel] = useState<string[]>([]);
   const [creando, setCreando] = useState(false);
+  const [preguntarSalida, setPreguntarSalida] = useState(false);
 
   // Perfil + primera carga de datos (mockups 2.2–2.6, datos reales vía RLS)
   useEffect(() => {
@@ -238,13 +239,28 @@ export function PantallaPanelFacilitador() {
         <div className="flex items-center gap-3">
           <p className="text-xs text-ink-2">{perfil.nombreCompleto}</p>
           <button
-            onClick={alSalir}
+            onClick={() => setPreguntarSalida(true)}
             className="h-8 px-3 rounded-lg border border-stroke text-xs text-ink-2 inline-flex items-center gap-1.5 hover:border-pink hover:text-pink cursor-pointer"
           >
             <SignOut size={13} /> Salir
           </button>
         </div>
       </header>
+
+      {/* Confirmación de salida (¿Salimos del panel?) */}
+      <ModalConfirmar
+        abierto={preguntarSalida}
+        titulo="¿Salir del panel?"
+        texto="Cierra tu sesión aquí. Para volver necesitarás tu correo y contraseña."
+        etiquetaNo="Me quedo"
+        etiquetaSi="Sí, salir"
+        peligro
+        alConfirmar={() => {
+          setPreguntarSalida(false);
+          void alSalir();
+        }}
+        alCancelar={() => setPreguntarSalida(false)}
+      />
 
       {error && (
         <p className="text-xs text-pink bg-tint-pink rounded-lg px-3 py-2">
@@ -367,10 +383,12 @@ export function PantallaPanelFacilitador() {
 
           {sesiones.length === 0 && !formAbierto ? (
             <div className="bg-white rounded-2xl shadow-card p-8 text-center">
-              <p className="text-sm text-ink-2">
-                Aún no hay sesiones relacionadas a tu cuenta. Crea la primera
-                con <span className="text-navy font-medium">Nueva sesión</span>.
-              </p>
+              <Vacio
+                titulo="Nada acá todavía"
+                texto="Crea la primera sesión de este taller: se genera su PIN para que las estudiantes entren."
+                etiquetaAccion="Nueva sesión"
+                alAccion={() => setFormAbierto(true)}
+              />
             </div>
           ) : (
             <div className="grid gap-3">
@@ -439,6 +457,7 @@ function DetalleSesion({
   const [detalleDe, setDetalleDe] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
   const [enLinea, setEnLinea] = useState<{ id: string; nombre: string }[]>([]);
+  const [preguntarCierre, setPreguntarCierre] = useState(false);
 
   // Carga (y recarga) del monitoreo + comentarios al entrar a la sesión
   useEffect(() => {
@@ -568,14 +587,14 @@ function DetalleSesion({
   }
 
   async function alEstado(nuevo: EstadoSesionPanel) {
-    if (
-      nuevo === "cerrada_pendiente" &&
-      !window.confirm(
-        "¿Cerrar la sesión? Los estudiantes dejarán de poder entrar con el PIN.",
-      )
-    ) {
+    if (nuevo === "cerrada_pendiente") {
+      setPreguntarCierre(true); // la confirmación va por el modal del diseño
       return;
     }
+    await ejecutarCambio(nuevo);
+  }
+
+  async function ejecutarCambio(nuevo: EstadoSesionPanel) {
     setAccionando(true);
     setError("");
     try {
@@ -709,6 +728,22 @@ function DetalleSesion({
             </div>
           </>
         )}
+
+        {/* Confirmación del cierre de taller (modal del diseño) */}
+        <ModalConfirmar
+          abierto={preguntarCierre}
+          titulo="¿Cerrar la sesión?"
+          texto="Las estudiantes dejarán de poder entrar con el PIN. Si te equivocas, la puedes reabrir aquí mismo."
+          etiquetaNo="No, aún no"
+          etiquetaSi="Sí, cerrar sesión"
+          peligro
+          cargando={accionando}
+          alConfirmar={() => {
+            setPreguntarCierre(false);
+            void ejecutarCambio("cerrada_pendiente");
+          }}
+          alCancelar={() => setPreguntarCierre(false)}
+        />
 
         {sesion.estado === "cerrada_pendiente" && (
           <div className="pt-3 border-t border-stroke flex flex-wrap gap-2">
