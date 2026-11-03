@@ -599,6 +599,28 @@ begin
 end;
 $$;
 
+-- El estudiante re-lee SUS respuestas del test (re-entrada a mitad de test:
+-- el front reenvía solo las que cambien; la lectura de la tabla está cerrada
+-- para anon por RLS, así que pasa por RPC con el PIN como credencial)
+create or replace function fn_listar_mis_respuestas_test(
+  p_pin text,
+  p_estudiante_id uuid
+)
+returns table (pregunta_id int, respuesta int)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  return query
+    select r.pregunta_id, r.respuesta
+      from respuestas_test_holland r
+      join sesiones s on s.id = r.sesion_id
+     where s.pin_acceso = p_pin
+       and r.estudiante_id = p_estudiante_id;
+end;
+$$;
+
 -- ============================================================================
 -- 7. ROW LEVEL SECURITY
 -- ============================================================================

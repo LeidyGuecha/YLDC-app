@@ -59,7 +59,6 @@ const HOJAS = [
   { archivo: "sheet4.xml", lotes: 10,
     bloques: [[255, 241], [265, 251], [275, 261], [285, 271], [295, 281], [305, 291]] },
 ];
-const TIPOS = ["R", "I", "A", "S", "E", "C"];
 /* índices del listado compartido que NO son ítems:
    titulares/nombre-sección/instrucciones y los marcadores TOTAL - X */
 const EXTRAS = new Set([
@@ -72,9 +71,9 @@ const updates = [];
 
 for (const h of HOJAS) {
   const seq = leerHoja(h.archivo);
-  const rangoItems = new Map(); // idBase del listado compartido → [id BD...]
+  const rangoItems = new Map(); // sBase del listado compartido → [índices…]
   const esperado = [];
-  h.bloques.forEach(([sBase, idBase]) => {
+  h.bloques.forEach(([sBase]) => {
     const indices = [];
     for (let j = 0; j < h.lotes; j++) {
       indices.push(sBase + j);
@@ -99,7 +98,7 @@ for (const h of HOJAS) {
       (soloItems.length === esperado.length ? " (orden difiere)" : ""),
     );
   }
-  h.bloques.forEach(([sBase, idBase], t) => {
+  h.bloques.forEach(([sBase, idBase]) => {
     for (let j = 0; j < h.lotes; j++) {
       const idx = sBase + j;
       const id = idBase + j;

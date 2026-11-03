@@ -14,10 +14,11 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
-    // pantalla-sesion.tsx: el contexto vive en localStorage y el estado de la
-    // sesión se sondea por RPC cada 10 s — ambos son lecturas de sistemas
-    // externos que por legítimo diseño actualizan setState dentro de useEffect.
-    files: ["src/app/estudiante/pantalla-sesion.tsx"],
+    // pantalla-sesion.tsx y pantalla-test.tsx: el contexto vive en localStorage
+    // y el estado de la sesión / del test se sondea por RPC — ambas son
+    // lecturas de sistemas externos que por legítimo diseño actualizan
+    // setState dentro de useEffect.
+    files: ["src/app/estudiante/pantalla-sesion.tsx", "src/app/estudiante/pantalla-test.tsx"],
     rules: { "react-hooks/set-state-in-effect": "off" },
   },
 ]);

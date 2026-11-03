@@ -10,6 +10,8 @@ import {
   CloudRain,
   Check,
   SpinnerGap,
+  Lightning,
+  ArrowRight,
 } from "@phosphor-icons/react";
 import { Badge, Logo } from "@/components/ui";
 import {
@@ -86,7 +88,7 @@ export function PantallaSesion() {
   );
 }
 
-/* ───────────────── Piso 2:一朝 estados de la sesión ───────────────── */
+/* ───────────────── Estados de la sesión ───────────────── */
 
 function CuerpoSesion({
   contexto,
@@ -160,6 +162,24 @@ function CuerpoSesion({
           {errorConexion} — reintentando automáticamente.
         </p>
       )}
+
+      <Link
+        href="/estudiante/test"
+        className="bg-white rounded-2xl shadow-card px-5 py-3.5 flex items-center gap-3 hover:opacity-90 transition-opacity"
+      >
+        <div className="h-9 w-9 shrink-0 rounded-full bg-tint-teal grid place-items-center">
+          <Lightning size={18} className="text-teal" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-navy">
+            Prueba de intereses — Tipología Holland
+          </p>
+          <p className="text-xs text-ink-2">
+            Se guarda sola mientras avanzas: entra y ponte cómodo ✏️
+          </p>
+        </div>
+        <ArrowRight size={16} className="text-ink-2 shrink-0" />
+      </Link>
 
       {cerrada ? (
         <PantallaCerrada filas={mias} alSalir={alSalir} />

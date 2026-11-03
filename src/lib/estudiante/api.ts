@@ -7,6 +7,9 @@ import {
   type FaseSesion,
   type FilaRespuesta,
   type InfoSesion,
+  type PreguntaTest,
+  type RespuestaTestGuardada,
+  type ResultadoHolland,
 } from "./types";
 
 /*
@@ -163,6 +166,122 @@ export async function listarMisRespuestas(opciones: {
   });
   if (error) return mapearErrorPg(error.message);
   return (data ?? []) as unknown as FilaRespuesta[];
+}
+
+/* ───────────────── Test de Holland (motor en supabase/schema.sql) ─────────── */
+
+export async function listarPreguntasTest(): Promise<PreguntaTest[]> {
+  if (!supabaseConfigurado) return demo.mockPreguntasTest();
+
+  const sb = getSupabase()!;
+  const { data, error } = await sb
+    .from("preguntas_test_holland")
+    .select("id,seccion,tipologia,orden,enunciado,tipo_respuesta")
+    .eq("activa", true)
+    .order("id");
+  if (error) return mapearErrorPg(error.message);
+  return (data ?? []).map((f) => {
+    const d = f as {
+      id: number;
+      seccion: PreguntaTest["seccion"];
+      tipologia: PreguntaTest["tipologia"];
+      orden: number;
+      enunciado: string;
+      tipo_respuesta: PreguntaTest["tipoRespuesta"];
+    };
+    return {
+      id: d.id,
+      seccion: d.seccion,
+      tipologia: d.tipologia,
+      orden: d.orden,
+      enunciado: d.enunciado,
+      tipoRespuesta: d.tipo_respuesta,
+    };
+  });
+}
+
+export async function guardarLoteTest(
+  pin: string,
+  estudianteId: string,
+  pares: Array<{ preguntaId: number; respuesta: number }>,
+): Promise<void> {
+  if (!supabaseConfigurado) {
+    return demo.mockGuardarLoteTest(pin, estudianteId, pares);
+  }
+  const sb = getSupabase()!;
+  const { error } = await sb.rpc("fn_guardar_respuestas_test", {
+    p_pin: pin,
+    p_estudiante_id: estudianteId,
+    p_lote: pares.map((p) => ({ pregunta_id: p.preguntaId, respuesta: p.respuesta })),
+  });
+  if (error) return mapearErrorPg(error.message);
+}
+
+export async function listarMisRespuestasTest(opciones: {
+  pin: string;
+  estudianteId: string;
+}): Promise<RespuestaTestGuardada[]> {
+  if (!supabaseConfigurado) {
+    return demo.mockListarMisRespuestasTest(opciones.pin, opciones.estudianteId);
+  }
+  const sb = getSupabase()!;
+  const { data, error } = await sb.rpc("fn_listar_mis_respuestas_test", {
+    p_pin: opciones.pin,
+    p_estudiante_id: opciones.estudianteId,
+  });
+  if (error) return mapearErrorPg(error.message);
+  return (data ?? []) as unknown as RespuestaTestGuardada[];
+}
+
+/** NULL (ningún cálculo aún) o el resultado del estudiante. */
+export async function calcularHolland(
+  pin: string,
+  estudianteId: string,
+): Promise<ResultadoHolland | null> {
+  if (!supabaseConfigurado) {
+    return demo.mockCalcularHolland(pin, estudianteId);
+  }
+  const sb = getSupabase()!;
+  const { data, error } = await sb.rpc("fn_calcular_holland", {
+    p_pin: pin,
+    p_estudiante_id: estudianteId,
+  });
+  if (error) return mapearErrorPg(error.message);
+  return data ? parsearResultado(data) : null;
+}
+
+export async function verResultadoPropio(
+  pin: string,
+  estudianteId: string,
+): Promise<ResultadoHolland | null> {
+  if (!supabaseConfigurado) {
+    return demo.mockVerResultadoPropio(pin, estudianteId);
+  }
+  const sb = getSupabase()!;
+  const { data, error } = await sb.rpc("fn_ver_resultado_propio", {
+    p_pin: pin,
+    p_estudiante_id: estudianteId,
+  });
+  if (error) return mapearErrorPg(error.message);
+  return data ? parsearResultado(data) : null;
+}
+
+function parsearResultado(data: unknown): ResultadoHolland {
+  const d = data as {
+    codigo_holland: string;
+    tipologias: string[];
+    puntajes: Record<string, number>;
+    ranked_completo?: string;
+  };
+  return {
+    codigoHolland: d.codigo_holland,
+    tipologias: [d.tipologias[0], d.tipologias[1], d.tipologias[2]] as ResultadoHolland["tipologias"],
+    puntajes: {
+      R: d.puntajes.R, I: d.puntajes.I, A: d.puntajes.A,
+      S: d.puntajes.S, E: d.puntajes.E, C: d.puntajes.C,
+    },
+    rankedCompleto: d.ranked_completo,
+  };
 }
 
 /* ───────────────── Mensajes amables para la UI ───────────────── */

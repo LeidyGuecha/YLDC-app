@@ -1,7 +1,41 @@
-/* Tipos compartidos del flujo del estudiante (pantallas 1.1–1.10). */
+/* Tipos compartidos del flujo del estudiante (pantallas 1.1–1.10 + test Holland). */
 
 export type FaseSesion = "como_vengo" | "actividad" | "como_voy";
 export type EstadoSesion = "abierta" | "cerrada_pendiente" | "completada";
+
+/* ───────────────── Test de Holland (motor en supabase) ───────────────── */
+
+export type SeccionTest =
+  | "intereses_actividades"
+  | "intereses_ocupaciones"
+  | "aptitudes"
+  | "personalidad";
+
+export type Tipologia = "R" | "I" | "A" | "S" | "E" | "C";
+
+/** Fila de preguntas_test_holland (lectura pública de catálogo). */
+export interface PreguntaTest {
+  id: number;
+  seccion: SeccionTest;
+  tipologia: Tipologia;
+  orden: number;
+  enunciado: string;
+  tipoRespuesta: "binario" | "escala_3";
+}
+
+/** Par guardado en respuestas_test_holland (fn_listar_mis_respuestas_test). */
+export interface RespuestaTestGuardada {
+  pregunta_id: number;
+  respuesta: number;
+}
+
+/** Salida de fn_calcular_holland / fn_ver_resultado_propio. */
+export interface ResultadoHolland {
+  codigoHolland: string; // ej. "EIA"
+  tipologias: [Tipologia, Tipologia, Tipologia];
+  puntajes: Record<Tipologia, number>;
+  rankedCompleto?: string;
+}
 
 export interface InfoSesion {
   sesionId: string;

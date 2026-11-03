@@ -4,6 +4,10 @@ import {
   type FaseSesion,
   type FilaRespuesta,
   type InfoSesion,
+  type PreguntaTest,
+  type RespuestaTestGuardada,
+  type ResultadoHolland,
+  type Tipologia,
 } from "./types";
 
 /*
@@ -194,6 +198,136 @@ export async function mockListarMisRespuestas(
   return leer<RespuestaMock[]>(
     `respuestas:${pin}:${estudianteId}`, [],
   );
+}
+
+/* ───────────────── Test de Holland (demo) ───────────────── */
+
+export async function mockPreguntasTest(): Promise<PreguntaTest[]> {
+  // réplica estructural del catálogo real (misma distribución 90/90/60/60);
+  // los enunciados son genéricos porque el modo demo no tiene el Excel.
+  const salidas: PreguntaTest[] = [];
+  for (let id = 1; id <= 300; id++) {
+    const seccion =
+      id <= 90
+        ? ("intereses_actividades" as const)
+        : id <= 180
+          ? ("intereses_ocupaciones" as const)
+          : id <= 240
+            ? ("aptitudes" as const)
+            : ("personalidad" as const);
+    const tipoRespuesta = id <= 180 ? ("binario" as const) : ("escala_3" as const);
+    const bloques = seccion === "intereses_actividades" || seccion === "intereses_ocupaciones" ? 15 : 10;
+    const tipologia = "RIASEC"[Math.floor((id - 1) / bloques) % 6] as Tipologia;
+    salidas.push({
+      id,
+      seccion,
+      tipologia,
+      orden: 1,
+      enunciado: `Pregunta demo ${id} (${seccion}) — el texto real llega desde la base de datos.`,
+      tipoRespuesta,
+    });
+  }
+  return salidas;
+}
+
+interface GuardadaDemo extends RespuestaTestGuardada {
+  sesion_id: string;
+}
+
+function claveRespTest(pin: string, estudianteId: string): string {
+  return `respuestas-test:${pin}:${estudianteId}`;
+}
+
+export async function mockGuardarLoteTest(
+  pin: string,
+  estudianteId: string,
+  pares: Array<{ preguntaId: number; respuesta: number }>,
+): Promise<void> {
+  const sesion = await mockInfoSesionPorPin(pin);
+  if (sesion.estado !== "abierta") {
+    throw new ErrorEstudiante("SESION_NO_ABIERTA");
+  }
+  const clave = claveRespTest(pin, estudianteId);
+  const filas = leer<GuardadaDemo[]>(clave, []);
+  for (const p of pares) {
+    const idx = filas.findIndex((f) => f.pregunta_id === p.preguntaId);
+    const fila: GuardadaDemo = {
+      pregunta_id: p.preguntaId,
+      respuesta: p.respuesta,
+      sesion_id: sesion.sesionId,
+    };
+    if (idx === -1) filas.push(fila);
+    else filas[idx] = fila;
+  }
+  escribir(clave, filas);
+}
+
+export async function mockListarMisRespuestasTest(
+  pin: string,
+  estudianteId: string,
+): Promise<RespuestaTestGuardada[]> {
+  const filas = await mockListarPersistido(pin, estudianteId);
+  return filas.map(({ pregunta_id, respuesta }) => ({ pregunta_id, respuesta }));
+}
+
+async function mockListarPersistido(
+  pin: string,
+  estudianteId: string,
+): Promise<GuardadaDemo[]> {
+  return leer<GuardadaDemo[]>(claveRespTest(pin, estudianteId), []);
+}
+
+/** Puntaje por tipología = suma de respuestas (idéntico a fn_calcular_holland). */
+function puntajesDesde(
+  pares: RespuestaTestGuardada[],
+  catalogo: Map<number, PreguntaTest>,
+): Record<Tipologia, number> {
+  const inicial = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+  return pares.reduce<Record<Tipologia, number>>((acum, p) => {
+    const pregunta = catalogo.get(p.pregunta_id);
+    if (pregunta) acum[pregunta.tipologia] += p.respuesta;
+    return acum;
+  }, inicial);
+}
+
+/** Versión demo: calcula desde los guardados y queda en memoria del navegador,
+ *  replicando resultados_test_holland (persistencia local keyed por estudiante). */
+export async function mockCalcularHolland(
+  pin: string,
+  estudianteId: string,
+): Promise<ResultadoHolland | null> {
+  const [pares, catalogo] = await Promise.all([
+    mockListarPersistido(pin, estudianteId),
+    mockPreguntasTest(),
+  ]);
+  if (pares.length < 300) throw new ErrorEstudiante("FALTAN_PREGUNTAS");
+  const puntajes = puntajesDesde(pares, new Map(catalogo.map((p) => [p.id, p])));
+  const ranked = (["R", "I", "A", "S", "E", "C"] as Tipologia[])
+    .sort(
+      (a, b) =>
+        puntajes[b] - puntajes[a] ||
+        "RIASEC".indexOf(a) - "RIASEC".indexOf(b),
+    )
+    .join("");
+  const resultado: ResultadoHolland = {
+    codigoHolland: ranked.slice(0, 3),
+    tipologias: [ranked[0], ranked[1], ranked[2]] as ResultadoHolland["tipologias"],
+    puntajes,
+    rankedCompleto: ranked,
+  };
+  escribir(`resultado-test:${pin}:${estudianteId}`, resultado);
+  return resultado;
+}
+
+export async function mockVerResultadoPropio(
+  pin: string,
+  estudianteId: string,
+): Promise<ResultadoHolland | null> {
+  const guardado = leer<ResultadoHolland | null>(
+    `resultado-test:${pin}:${estudianteId}`,
+    null,
+  );
+  return guardado;
 }
 
 /* ───────────────── Panel del simulador (solo demo) ───────────────── */
