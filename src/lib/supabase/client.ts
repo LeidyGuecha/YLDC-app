@@ -1,6 +1,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { SUPABASE_ANON_KEY, SUPABASE_URL, supabaseConfigurado } from "./config";
 
+export type { SupabaseClient } from "@supabase/supabase-js";
+
 /*
   Cliente de navegador (singleton).
   · El estudiante NO tiene cuenta de Auth: toda su escritura pasa por las RPC

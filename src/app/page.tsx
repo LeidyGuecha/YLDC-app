@@ -86,6 +86,44 @@ export default function Home() {
         </span>
       </Link>
 
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Link
+          href="/facilitador"
+          className="group flex items-center justify-between gap-4 rounded-2xl bg-teal p-5 shadow-card hover:shadow-modal transition-shadow"
+        >
+          <div className="flex flex-col gap-1">
+            <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-white">
+              Panel del facilitador
+            </p>
+            <p className="text-sm font-semibold text-white">
+              Crea sesiones, monitorea en vivo y comenta al cierre
+            </p>
+          </div>
+          <span className="h-9 px-4 rounded-full bg-navy text-white text-sm font-medium inline-flex items-center group-hover:gap-3 gap-2 transition-all">
+            Entrar
+            <ArrowRight size={14} weight="bold" />
+          </span>
+        </Link>
+
+        <Link
+          href="/psicologa"
+          className="group flex items-center justify-between gap-4 rounded-2xl bg-pink p-5 shadow-card hover:shadow-modal transition-shadow"
+        >
+          <div className="flex flex-col gap-1">
+            <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-white">
+              Panel de la psicóloga
+            </p>
+            <p className="text-sm font-semibold text-white">
+              Navega por curso, revisa el test y comenta individual
+            </p>
+          </div>
+          <span className="h-9 px-4 rounded-full bg-navy text-white text-sm font-medium inline-flex items-center group-hover:gap-3 gap-2 transition-all">
+            Entrar
+            <ArrowRight size={14} weight="bold" />
+          </span>
+        </Link>
+      </div>
+
       <Section title="Logo de marca (brandboard oficial)">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <Card className="p-5 border border-platinum shadow-none flex flex-col items-center justify-center gap-1.5 min-h-32">
