@@ -265,13 +265,16 @@ stable
 set search_path = public
 as $$
   select exists (
-    select 1 from facilitadores f
-    where (
-          f.id = (select s.facilitador_lead_id from sesiones s where s.id = p_sesion)
-          or f.id = any(select s.co_facilitadores_ids from sesiones s where s.id = p_sesion)
+    select 1
+    from sesiones s
+    join facilitadores f
+      on f.auth_id = auth.uid()
+     and f.activo
+     and (
+          s.facilitador_lead_id = f.id
+          or f.id = any(s.co_facilitadores_ids)
         )
-      and f.auth_id = auth.uid()
-      and f.activo
+    where s.id = p_sesion
   );
 $$;
 
