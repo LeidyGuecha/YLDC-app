@@ -82,6 +82,7 @@ export function PantallaTest() {
         borrarContexto();
         router.push("/estudiante");
       }}
+      alSesion={() => router.push("/estudiante/sesion")}
     />
   );
 }
@@ -91,9 +92,12 @@ export function PantallaTest() {
 function CuerpoTest({
   contexto,
   alSalir,
+  alSesion,
 }: {
   contexto: ContextoEstudiante;
   alSalir: () => void;
+  /** vuelve a la sesión SIN borrar el contexto del navegador. */
+  alSesion: () => void;
 }) {
   const [preguntas, setPreguntas] = useState<PreguntaTest[] | null>(null);
   const [respuestas, setRespuestas] = useState<Record<number, number>>({});
@@ -232,7 +236,7 @@ function CuerpoTest({
           resultado={resultado}
           respondidas={respondidas}
           total={total}
-          alSesion={alSalir}
+          alSesion={alSesion}
         />
       </main>
     );
@@ -258,6 +262,16 @@ function CuerpoTest({
         alCalcular={() => void calcular()}
         alAvanzar={() => void vaciar()}
       />
+
+      <footer className="mt-auto pt-6 text-xs text-ink-2">
+        <button
+          type="button"
+          onClick={alSalir}
+          className="hover:text-navy underline underline-offset-2 cursor-pointer"
+        >
+          Salir (borra tu registro en este navegador)
+        </button>
+      </footer>
     </main>
   );
 }
