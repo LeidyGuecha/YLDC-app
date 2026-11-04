@@ -599,7 +599,9 @@ function VistaResultado({
   total: number;
   alSesion: () => void;
 }) {
-  const maximo = Math.max(...Object.values(resultado.puntajes), 1);
+  // Escala acordada: barras sobre un máximo fijo de 90 puntos por tipología
+  // (mismo criterio que los paneles de la psicóloga y el admin).
+  const maximo = 90;
   const orden: Array<keyof ResultadoHolland["puntajes"]> = ["R", "I", "A", "S", "E", "C"];
 
   return (
@@ -638,14 +640,15 @@ function VistaResultado({
                 style={{ width: `${(resultado.puntajes[t] / maximo) * 100}%` }}
               />
             </div>
-            <span className="text-xs text-ink-2 tabular-nums w-8 text-right">
-              {resultado.puntajes[t]}
+            <span className="text-xs text-ink-2 tabular-nums w-10 text-right">
+              {resultado.puntajes[t]}/90
             </span>
           </div>
         ))}
         <p className="text-[11px] text-ink-2 pt-1">
-          Respondiste {respondidas}/{total} preguntas. Si tu psicóloga lo pide,
-          puedes rehacerlo más adelante.
+          Cada barra mide sobre un máximo de 90 puntos. Respondiste{" "}
+          {respondidas}/{total} preguntas. Si tu psicóloga lo pide, puedes
+          rehacerlo más adelante.
         </p>
       </article>
 
