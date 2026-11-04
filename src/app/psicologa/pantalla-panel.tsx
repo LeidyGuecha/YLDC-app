@@ -15,6 +15,7 @@ import {
   listarEstudiantesDeCurso,
   listarHistorialEstudiante,
   listarComentariosIndividuales,
+  listarComentariosGrupalesPsicologa,
   listarResultadosEstudiantes,
   listarSesionesDeCurso,
   guardarComentarioIndividual,
@@ -27,7 +28,16 @@ import type {
   ResultadoPsicologa,
   SesionPsicologa,
   ComentarioIndividualPsicologa,
+  ComentarioGrupalPsicologa,
 } from "@/lib/psicologa/types";
+import {
+  bytesPdfEstudiante,
+  descargarBytes,
+  descargarPdfEstudiante,
+  nombreArchivoEstudiante,
+  type ReporteComentarioGrupal,
+  type ReporteRespuesta,
+} from "@/lib/pdf/reporte";
 import { mensajeAmable } from "@/lib/estudiante/api";
 import { supabaseConfigurado } from "@/lib/supabase/config";
 
@@ -61,6 +71,12 @@ function resumenFila(r: RespuestaPsicologa): string {
   if (r.seleccion) piezas.push(`Elección: ${r.seleccion}`);
   if (r.checklist?.length) piezas.push(`Opciones: ${r.checklist.join(", ")}`);
   return piezas.length > 0 ? piezas.join(" · ") : "(sin contenido)";
+}
+
+/** Encabezado uniforme de una sesión (para el panel y para los reportes). */
+function tituloSesionPanel(s: SesionPsicologa): string {
+  const taller = s.tallerTitulo || `Sesión ${s.numeroSesion}`;
+  return `${taller} · PIN ${s.pin}`;
 }
 
 function BarraPuntaje({ tip, valor }: { tip: string; valor: number }) {
@@ -258,7 +274,13 @@ function DetalleCurso({
   const [comentarios, setComentarios] = useState<
     ComentarioIndividualPsicologa[]
   >([]);
+  const [comentariosGrupales, setComentariosGrupales] = useState<
+    ComentarioGrupalPsicologa[]
+  >([]);
   const [resultados, setResultados] = useState<ResultadoPsicologa[]>([]);
+  const [generandoPdf, setGenerandoPdf] = useState(false);
+  const [generandoZip, setGenerandoZip] = useState(false);
+  const [zipAvance, setZipAvance] = useState<string | null>(null);
   const [detalleDe, setDetalleDe] = useState<string | null>(null);
   const [historialDe, setHistorialDe] = useState<
     Record<string, RespuestaPsicologa[]>
@@ -294,6 +316,13 @@ function DetalleCurso({
         if (!vivo) return;
         setEstudiantes(es);
         setSesiones(ses);
+        // comentarios grupales de las sesiones del curso (para el PDF/ZIP)
+        const gr =
+          ses.length > 0
+            ? await listarComentariosGrupalesPsicologa(ses.map((s) => s.id))
+            : [];
+        if (!vivo) return;
+        setComentariosGrupales(gr);
       } catch (e) {
         alError(mensajeAmable(e));
       }
@@ -379,6 +408,119 @@ function DetalleCurso({
     return sesiones.filter((s) => ids.has(s.id));
   }, [historialDetalle, sesiones]);
 
+  /* ── datos para el reporte PDF (RF-012) y el ZIP del curso (RF-013) ── */
+
+  function datosReporte(
+    estudiante: EstudiantePsicologa,
+    historial: RespuestaPsicologa[],
+  ) {
+    const mapaSesiones = new Map(sesiones.map((s) => [s.id, s]));
+    const fases: ReporteRespuesta[] = historial.map((r) => ({
+      sesionTitulo: tituloSesionPanel(
+        mapaSesiones.get(r.sesionId) ?? {
+          id: r.sesionId,
+          tallerTitulo: "Sesión",
+          numeroSesion: 0,
+          pin: "—",
+          estado: "abierta",
+          faseActual: "como_vengo",
+          creadoEn: "",
+        },
+      ),
+      fase: r.tipo,
+      fecha: r.fecha,
+      resumen: resumenFila(r),
+    }));
+    const comentarioFila = mapaComentarios.get(estudiante.id);
+    const comentarioIndividual = comentarioFila
+      ? {
+          autor:
+            comentarioFila.psicologaId === perfil.id
+              ? perfil.nombreCompleto
+              : comentarioFila.psicologaNombre ?? "Otra psicóloga",
+          fecha: comentarioFila.fecha,
+          editado: comentarioFila.editadoEn,
+          texto: comentarioFila.comentario,
+        }
+      : null;
+    const grupales: ReporteComentarioGrupal[] = comentariosGrupales
+      .filter((g) => mapaSesiones.has(g.sesionId))
+      .map((g) => ({
+        sesionTitulo: tituloSesionPanel(mapaSesiones.get(g.sesionId)!),
+        fecha: g.fecha,
+        autor: g.facilitadorNombre,
+        texto: g.comentario,
+      }));
+    const resultado = mapaResultados.get(estudiante.id) ?? null;
+
+    return {
+      colegio: curso.colegioNombre,
+      curso: curso.etiqueta,
+      nombre: estudiante.nombreCompleto,
+      ti: estudiante.ti,
+      consentimiento: estudiante.consentimiento,
+      generadoPor: `${perfil.nombreCompleto} (psicóloga)`,
+      resultado: resultado
+        ? {
+            codigo: resultado.codigo,
+            tipologias: resultado.tipologias,
+            fecha: resultado.fechaCalculo,
+            puntajes: resultado.puntajes,
+          }
+        : null,
+      comentarioIndividual,
+      comentariosGrupales: grupales,
+      fases,
+    };
+  }
+
+  async function alPdfDetalle() {
+    if (!estudianteDetalle) return;
+    setGenerandoPdf(true);
+    try {
+      await descargarPdfEstudiante(
+        datosReporte(estudianteDetalle, historialDetalle),
+      );
+    } catch (e) {
+      alError(mensajeAmable(e));
+    } finally {
+      setGenerandoPdf(false);
+    }
+  }
+
+  async function alZipCurso() {
+    setGenerandoZip(true);
+    try {
+      const { default: JSZip } = await import("jszip");
+      const zip = new JSZip();
+      let i = 0;
+      for (const est of estudiantes) {
+        i++;
+        setZipAvance(`${i}/${estudiantes.length}`);
+        // reutiliza el historial en caché; el resto se trae una vez
+        let historial = historialDe[est.id];
+        if (!historial) {
+          historial = await listarHistorialEstudiante(sesiones, est.id);
+          setHistorialDe((prev) => ({ ...prev, [est.id]: historial }));
+        }
+        const bytes = await bytesPdfEstudiante(datosReporte(est, historial));
+        zip.file(nombreArchivoEstudiante(est.nombreCompleto, i), bytes);
+      }
+      const zipBytes = await zip.generateAsync({ type: "uint8array" });
+      const nombreCurso = curso.etiqueta.replace(/[°^\W]+/g, "");
+      descargarBytes(
+        zipBytes,
+        `curso_${nombreCurso}_${curso.anio}.zip`,
+        "application/zip",
+      );
+      setZipAvance(null);
+    } catch (e) {
+      alError(mensajeAmable(e));
+    } finally {
+      setGenerandoZip(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <button
@@ -410,6 +552,21 @@ function DetalleCurso({
               })}
             </div>
           )}
+        </div>
+
+        <div className="flex justify-end">
+          <button
+            onClick={alZipCurso}
+            disabled={generandoZip || estudiantes.length === 0}
+            className="h-8 px-3 rounded-lg border border-teal text-teal text-xs font-medium inline-flex items-center gap-1.5 hover:bg-tint-teal disabled:opacity-40 cursor-pointer"
+          >
+            {generandoZip ? (
+              <SpinnerGap size={12} className="animate-spin" />
+            ) : null}
+            {generandoZip
+              ? `Generando ${zipAvance ?? ""}…`
+              : `Descargar ZIP del curso (${estudiantes.length} PDF)`}
+          </button>
         </div>
 
         {estudiantes.length === 0 ? (
@@ -479,9 +636,21 @@ function DetalleCurso({
       {/* Detalle de la estudiante seleccionada */}
       {estudianteDetalle && (
         <section className="bg-white rounded-2xl shadow-card p-5 flex flex-col gap-4">
-          <h3 className="text-sm font-bold text-navy">
-            {estudianteDetalle.nombreCompleto}
-          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-bold text-navy">
+              {estudianteDetalle.nombreCompleto}
+            </h3>
+            <button
+              onClick={alPdfDetalle}
+              disabled={generandoPdf}
+              className="h-8 px-3 rounded-lg border border-teal text-teal text-xs font-medium inline-flex items-center gap-1.5 hover:bg-tint-teal disabled:opacity-40 cursor-pointer"
+            >
+              {generandoPdf ? (
+                <SpinnerGap size={12} className="animate-spin" />
+              ) : null}
+              Descargar PDF
+            </button>
+          </div>
 
           {resultadoDetalle ? (
             <div className="rounded-xl bg-tint-teal p-4 flex flex-col gap-2">

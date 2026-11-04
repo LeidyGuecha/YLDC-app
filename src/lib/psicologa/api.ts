@@ -3,6 +3,7 @@ import { supabaseConfigurado } from "@/lib/supabase/config";
 import { ErrorPanelo } from "@/lib/facilitador/auth"; // vocabulario de error compartido
 import type {
   ComentarioIndividualPsicologa,
+  ComentarioGrupalPsicologa,
   CursoPsicologa,
   EstudiantePsicologa,
   PerfilPsicologa,
@@ -207,7 +208,9 @@ export async function listarComentariosIndividuales(
   if (estudianteIds.length === 0) return [];
   const { data, error } = await sb
     .from("comentarios_individuales_psicologa")
-    .select("id,estudiante_id,psicologa_id,comentario,fecha,editado_en")
+    .select(
+      "id,estudiante_id,psicologa_id,comentario,fecha,editado_en,psicologa:psicologas(nombre_completo)",
+    )
     .in("estudiante_id", estudianteIds);
   if (error) throw new ErrorPanelo("OTRO", error.message);
   return (data ?? []).map((c) => {
@@ -218,14 +221,45 @@ export async function listarComentariosIndividuales(
       comentario: string;
       fecha: string;
       editado_en: string | null;
+      psicologa: { nombre_completo?: string } | null;
     };
     return {
       id: r.id,
       estudianteId: r.estudiante_id,
       psicologaId: r.psicologa_id,
+      psicologaNombre: r.psicologa?.nombre_completo ?? null,
       comentario: r.comentario,
       fecha: r.fecha,
       editadoEn: r.editado_en,
+    };
+  });
+}
+
+/** Comentarios grupales de TODAS las sesiones dadas (para el PDF/ZIP). */
+export async function listarComentariosGrupalesPsicologa(
+  sesionIds: string[],
+): Promise<ComentarioGrupalPsicologa[]> {
+  const sb = asegurarSB();
+  if (sesionIds.length === 0) return [];
+  const { data, error } = await sb
+    .from("comentarios_grupales")
+    .select(
+      "sesion_id,comentario,fecha,facilitador:facilitadores(nombre_completo)",
+    )
+    .in("sesion_id", sesionIds);
+  if (error) throw new ErrorPanelo("OTRO", error.message);
+  return (data ?? []).map((c) => {
+    const r = c as unknown as {
+      sesion_id: string;
+      comentario: string;
+      fecha: string;
+      facilitador: { nombre_completo?: string } | null;
+    };
+    return {
+      sesionId: r.sesion_id,
+      facilitadorNombre: r.facilitador?.nombre_completo ?? "Facilitador",
+      comentario: r.comentario,
+      fecha: r.fecha,
     };
   });
 }

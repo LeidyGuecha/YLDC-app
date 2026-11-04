@@ -51,9 +51,19 @@ export interface ComentarioIndividualPsicologa {
   id: string;
   estudianteId: string;
   psicologaId: string;
+  /** Nombre de la autora (embed de la consulta; para reportes). */
+  psicologaNombre: string | null;
   comentario: string;
   fecha: string;
   editadoEn: string | null;
+}
+
+/** Comentario grupal del facilitador en una sesión (historial/reportes). */
+export interface ComentarioGrupalPsicologa {
+  sesionId: string;
+  facilitadorNombre: string;
+  comentario: string;
+  fecha: string;
 }
 
 /** Una respuesta de fase del estudiante (historial). */
