@@ -137,8 +137,14 @@ create table if not exists comentarios_grupales (
   sesion_id uuid not null references sesiones(id),
   facilitador_id uuid not null references facilitadores(id),
   comentario text not null,
-  fecha     timestamptz not null default now()
+  fecha     timestamptz not null default now(),
+  -- edición del comentario grupal (el facilitador puede ajustarlo)
+  editado_en timestamptz
 );
+
+-- parche idempotente para bases ya creadas sin la columna:
+alter table comentarios_grupales
+  add column if not exists editado_en timestamptz;
 
 create table if not exists comentarios_individuales_psicologa (
   id        uuid primary key default gen_random_uuid(),
