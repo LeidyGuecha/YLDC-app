@@ -10,5 +10,7 @@ export default function EstudianteLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="flex-1">{children}</div>;
+  /* Contenedor flex: los <main flex-1> de las pantallas estiran hasta el borde
+     inferior (sin él, el panel navy del login no llega hasta abajo). */
+  return <div className="flex flex-1 flex-col">{children}</div>;
 }
