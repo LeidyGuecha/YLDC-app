@@ -2,8 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, SignOut, SpinnerGap } from "@phosphor-icons/react";
+import {
+  ClockCounterClockwise,
+  GraduationCap,
+  Plus,
+  SignOut,
+  SpinnerGap,
+  Users,
+} from "@phosphor-icons/react";
 import { Badge, Logo, ModalConfirmar, Vacio } from "@/components/ui";
+import { MarcoStaff } from "@/components/marco-staff";
 import { cerrarSesion, miPerfil } from "@/lib/admin/auth";
 import {
   cambiarCuenta,
@@ -123,25 +131,37 @@ export function PantallaPanelAdmin() {
   if (!perfil) return null; // ya redirigió a /admin
 
   return (
-    <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-8 flex flex-col gap-6">
-      <header className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <Logo variant="color" height={28} />
-          <p className="text-[11px] font-medium tracking-[0.18em] uppercase text-teal">
-            Panel del administrador
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <p className="text-xs text-ink-2">{perfil.nombreCompleto}</p>
-          <button
-            onClick={() => setPreguntarSalida(true)}
-            className="h-8 px-3 rounded-lg border border-stroke text-xs text-ink-2 inline-flex items-center gap-1.5 hover:border-pink hover:text-pink cursor-pointer"
-          >
-            <SignOut size={13} /> Salir
-          </button>
-        </div>
-      </header>
-
+    <MarcoStaff
+      rol="Panel del administrador"
+      nombre={perfil.nombreCompleto}
+      alSalir={() => setPreguntarSalida(true)}
+      nav={[
+        {
+          etiqueta: "Cuentas",
+          icono: <Users size={16} />,
+          activo: tab === "cuentas",
+          onClick: () => setTab("cuentas"),
+        },
+        {
+          etiqueta: "Estudiantes",
+          icono: <GraduationCap size={16} />,
+          activo: tab === "estudiantes",
+          onClick: () => setTab("estudiantes"),
+        },
+        {
+          etiqueta: "Historial",
+          icono: <ClockCounterClockwise size={16} />,
+          activo: tab === "historial",
+          onClick: () => setTab("historial"),
+        },
+        {
+          etiqueta: "Cerrar sesión",
+          icono: <SignOut size={16} />,
+          salida: true,
+          onClick: () => setPreguntarSalida(true),
+        },
+      ]}
+    >
       {/* Confirmación de salida (¿Salimos del panel?) */}
       <ModalConfirmar
         abierto={preguntarSalida}
@@ -163,28 +183,6 @@ export function PantallaPanelAdmin() {
         </p>
       )}
 
-      <nav className="flex flex-wrap gap-2">
-        {(
-          [
-            ["cuentas", "Cuentas"],
-            ["estudiantes", "Estudiantes"],
-            ["historial", "Historial"],
-          ] as const
-        ).map(([clave, texto]) => (
-          <button
-            key={clave}
-            onClick={() => setTab(clave)}
-            className={`h-9 px-4 rounded-full text-sm font-medium border cursor-pointer ${
-              tab === clave
-                ? "bg-navy text-white border-navy"
-                : "bg-white text-ink-2 border-stroke hover:border-navy"
-            }`}
-          >
-            {texto}
-          </button>
-        ))}
-      </nav>
-
       {tab === "cuentas" && (
         <PanelCuentas
           perfilPropioId={perfil.id}
@@ -195,7 +193,7 @@ export function PantallaPanelAdmin() {
         <PanelEstudiantes alError={(m) => setError(m)} />
       )}
       {tab === "historial" && <PanelHistorial alError={(m) => setError(m)} />}
-    </main>
+    </MarcoStaff>
   );
 }
 

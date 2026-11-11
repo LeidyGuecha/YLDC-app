@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  Books,
   ChatCircleDots,
   SignOut,
   SpinnerGap,
 } from "@phosphor-icons/react";
 import { Badge, Logo, ModalConfirmar, Vacio } from "@/components/ui";
+import { MarcoStaff } from "@/components/marco-staff";
 import { cerrarSesion, miPerfil } from "@/lib/psicologa/auth";
 import {
   listarCursosPsicologa,
@@ -156,28 +158,26 @@ export function PantallaPanelPsicologa() {
   const curso = cursos.find((c) => c.id === cursoSel) ?? null;
 
   return (
-    <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-8 flex flex-col gap-6">
-      <header className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <Logo variant="color" height={28} />
-          <p className="text-[11px] font-medium tracking-[0.18em] uppercase text-pink">
-            Panel de la psicóloga
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <p className="text-xs text-ink-2">
-            {perfil.nombreCompleto}
-            {perfil.colegioNombre && ` · ${perfil.colegioNombre}`}
-          </p>
-          <button
-            onClick={() => setPreguntarSalida(true)}
-            className="h-8 px-3 rounded-lg border border-stroke text-xs text-ink-2 inline-flex items-center gap-1.5 hover:border-pink hover:text-pink cursor-pointer"
-          >
-            <SignOut size={13} /> Salir
-          </button>
-        </div>
-      </header>
-
+    <MarcoStaff
+      rol="Panel de la psicóloga"
+      acento="pink"
+      nombre={perfil.nombreCompleto}
+      alSalir={() => setPreguntarSalida(true)}
+      nav={[
+        {
+          etiqueta: "Mis cursos",
+          icono: <Books size={16} />,
+          activo: !cursoSel,
+          onClick: () => setCursoSel(null),
+        },
+        {
+          etiqueta: "Cerrar sesión",
+          icono: <SignOut size={16} />,
+          salida: true,
+          onClick: () => setPreguntarSalida(true),
+        },
+      ]}
+    >
       {/* Confirmación de salida (¿Salimos del panel?) */}
       <ModalConfirmar
         abierto={preguntarSalida}
@@ -252,7 +252,7 @@ export function PantallaPanelPsicologa() {
           )}
         </section>
       )}
-    </main>
+    </MarcoStaff>
   );
 }
 

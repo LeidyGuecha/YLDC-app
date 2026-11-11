@@ -9,9 +9,11 @@ import {
   Plus,
   SignOut,
   SpinnerGap,
+  Stack,
   X,
 } from "@phosphor-icons/react";
 import { Badge, Logo, ModalConfirmar, Vacio } from "@/components/ui";
+import { MarcoStaff } from "@/components/marco-staff";
 import { cerrarSesion, miPerfil } from "@/lib/facilitador/auth";
 import {
   cambiarEstado,
@@ -228,25 +230,37 @@ export function PantallaPanelFacilitador() {
   const sesion = sesiones.find((s) => s.id === seleccion) ?? null;
 
   return (
-    <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-8 flex flex-col gap-6">
-      <header className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <Logo variant="color" height={28} />
-          <p className="text-[11px] font-medium tracking-[0.18em] uppercase text-teal">
-            Panel del facilitador
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <p className="text-xs text-ink-2">{perfil.nombreCompleto}</p>
-          <button
-            onClick={() => setPreguntarSalida(true)}
-            className="h-8 px-3 rounded-lg border border-stroke text-xs text-ink-2 inline-flex items-center gap-1.5 hover:border-pink hover:text-pink cursor-pointer"
-          >
-            <SignOut size={13} /> Salir
-          </button>
-        </div>
-      </header>
-
+    <MarcoStaff
+      rol="Panel del facilitador"
+      nombre={perfil.nombreCompleto}
+      alSalir={() => setPreguntarSalida(true)}
+      nav={[
+        {
+          etiqueta: "Nueva sesión",
+          icono: <Plus size={16} />,
+          activo: formAbierto && !seleccion,
+          onClick: () => {
+            setSeleccion(null);
+            setFormAbierto(true);
+          },
+        },
+        {
+          etiqueta: "Mis sesiones",
+          icono: <Stack size={16} />,
+          activo: !formAbierto && !seleccion,
+          onClick: () => {
+            setSeleccion(null);
+            setFormAbierto(false);
+          },
+        },
+        {
+          etiqueta: "Cerrar sesión",
+          icono: <SignOut size={16} />,
+          salida: true,
+          onClick: () => setPreguntarSalida(true),
+        },
+      ]}
+    >
       {/* Confirmación de salida (¿Salimos del panel?) */}
       <ModalConfirmar
         abierto={preguntarSalida}
@@ -426,7 +440,7 @@ export function PantallaPanelFacilitador() {
           )}
         </section>
       )}
-    </main>
+    </MarcoStaff>
   );
 }
 
