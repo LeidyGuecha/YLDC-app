@@ -523,15 +523,17 @@ declare
   v_r int; v_i int; v_a int; v_s int; v_e int; v_c int;
   v_ranked text; v_json json;
 begin
-  -- sesión asociada a las respuestas del estudiante
-  select distinct r.sesion_id into v_sesion
-    from respuestas_test_holland r where r.estudiante_id = p_estudiante_id
-    limit 1;
+  -- la sesión del PIN debe ser una de las que recibió respuestas del
+  -- estudiante (las re-entradas pueden repartir filas entre sesiones del
+  -- mismo curso; por eso no se toma una fila al azar)
+  select s.id into v_sesion
+    from sesiones s
+   where s.pin_acceso = p_pin
+     and exists (select 1 from respuestas_test_holland r
+                  where r.estudiante_id = p_estudiante_id
+                    and r.sesion_id = s.id);
   if v_sesion is null then
-    raise exception 'El estudiante no tiene respuestas del test';
-  end if;
-  if not exists (select 1 from sesiones s where s.id = v_sesion and s.pin_acceso = p_pin) then
-    raise exception 'PIN inválido';
+    raise exception 'El estudiante no tiene respuestas del test para este PIN';
   end if;
 
   select count(*) into v_total
