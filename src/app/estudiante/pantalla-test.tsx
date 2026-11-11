@@ -12,7 +12,8 @@ import {
   Lightning,
   Medal,
 } from "@phosphor-icons/react";
-import { Badge, Logo } from "@/components/ui";
+import { Badge } from "@/components/ui";
+import { MarcoEstudiante } from "@/components/marco-estudiante";
 import {
   calcularHolland,
   guardarLoteTest,
@@ -69,9 +70,11 @@ export function PantallaTest() {
 
   if (!contexto) {
     return (
-      <main className="flex-1 grid place-items-center text-sm text-ink-2">
-        Preparando tu test…
-      </main>
+      <MarcoEstudiante>
+        <div className="grid flex-1 place-items-center text-sm text-ink-2">
+          Preparando tu test…
+        </div>
+      </MarcoEstudiante>
     );
   }
 
@@ -220,9 +223,11 @@ function CuerpoTest({
 
   if (preguntas === null) {
     return (
-      <main className="flex-1 grid place-items-center text-sm text-ink-2">
-        {aviso || "Cargando el test…"}
-      </main>
+      <MarcoEstudiante>
+        <div className="grid flex-1 place-items-center text-sm text-ink-2">
+          {aviso || "Cargando el test…"}
+        </div>
+      </MarcoEstudiante>
     );
   }
 
@@ -230,7 +235,15 @@ function CuerpoTest({
 
   if (resultado) {
     return (
-      <main className="flex-1 w-full max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6">
+      <MarcoEstudiante
+        acciones={
+          <Badge variant="yellow" dot>
+            <Link href="/estudiante/sesion" className="flex items-center gap-1.5">
+              ← Volver a la sesión
+            </Link>
+          </Badge>
+        }
+      >
         <EncabezadoTest contexto={contexto} />
         <VistaResultado
           resultado={resultado}
@@ -238,13 +251,30 @@ function CuerpoTest({
           total={total}
           alSesion={alSesion}
         />
-      </main>
+      </MarcoEstudiante>
     );
   }
 
   /* — Estructura por navegador, y por moda de Test ya se verá; el estado de la UI — */
   return (
-    <main className="flex-1 w-full max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6">
+    <MarcoEstudiante
+      acciones={
+        <Badge variant="yellow" dot>
+          <Link href="/estudiante/sesion" className="flex items-center gap-1.5">
+            ← Volver a la sesión
+          </Link>
+        </Badge>
+      }
+      pie={
+        <button
+          type="button"
+          onClick={alSalir}
+          className="hover:text-white underline underline-offset-2 cursor-pointer"
+        >
+          Salir (borra tu registro en este navegador)
+        </button>
+      }
+    >
       <EncabezadoTest contexto={contexto} />
       <IntroInstrumento respondidas={respondidas} total={total} completo={completo} />
       {aviso && (
@@ -262,17 +292,7 @@ function CuerpoTest({
         alCalcular={() => void calcular()}
         alAvanzar={() => void vaciar()}
       />
-
-      <footer className="mt-auto pt-6 text-xs text-ink-2">
-        <button
-          type="button"
-          onClick={alSalir}
-          className="hover:text-navy underline underline-offset-2 cursor-pointer"
-        >
-          Salir (borra tu registro en este navegador)
-        </button>
-      </footer>
-    </main>
+    </MarcoEstudiante>
   );
 }
 
@@ -294,21 +314,13 @@ function agruparSecciones(preguntas: PreguntaTest[]) {
 function EncabezadoTest({ contexto }: { contexto: ContextoEstudiante }) {
   return (
     <header className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <Logo variant="color" height={36} />
-        <Badge variant="yellow" dot>
-          <Link href="/estudiante/sesion" className="flex items-center gap-1.5">
-            ← Volver a la sesión
-          </Link>
-        </Badge>
-      </div>
       <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-teal">
         YLDC · {TITULO_INSTRUMENTO}
       </p>
-      <h1 className="text-xl font-bold text-navy">
+      <h1 className="text-xl font-bold text-navy lg:text-[28px]">
         Tu prueba de intereses Holland
       </h1>
-      <p className="text-xs text-ink-2">
+      <p className="text-xs text-ink-2 lg:text-sm">
         {contexto.nombre.split(" ")[0]}, sin respuestas correctas: se trata de
         marcar lo que SÍ va contigo. Nadie más ve esto; solo tu psicóloga lo
         leerá más adelante.
@@ -341,7 +353,7 @@ function IntroInstrumento({
           </p>
         </div>
       </div>
-      <div className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {ORDEN_SECCIONES.map((s) => (
           <div key={s} className="rounded-xl border border-stroke p-4">
             <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-teal">
@@ -606,7 +618,7 @@ function VistaResultado({
 
   return (
     <section className="flex flex-col gap-5">
-      <article className="bg-white rounded-2xl shadow-card p-8 text-center flex flex-col items-center gap-3">
+      <article className="mx-auto w-full max-w-xl bg-white rounded-2xl shadow-card p-8 text-center flex flex-col items-center gap-3">
         <div className="h-12 w-12 rounded-full bg-tint-teal grid place-items-center">
           <Medal size={24} className="text-teal" />
         </div>

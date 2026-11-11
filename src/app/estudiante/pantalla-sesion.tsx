@@ -13,7 +13,8 @@ import {
   Lightning,
   ArrowRight,
 } from "@phosphor-icons/react";
-import { Badge, Logo, Stepper } from "@/components/ui";
+import { Badge, Stepper } from "@/components/ui";
+import { MarcoEstudiante } from "@/components/marco-estudiante";
 import {
   listarMisRespuestas,
   mensajeAmable,
@@ -72,9 +73,11 @@ export function PantallaSesion() {
 
   if (!contexto) {
     return (
-      <main className="flex-1 grid place-items-center text-sm text-ink-2">
-        Cargando tu sesión…
-      </main>
+      <MarcoEstudiante>
+        <div className="grid flex-1 place-items-center text-sm text-ink-2">
+          Cargando tu sesión…
+        </div>
+      </MarcoEstudiante>
     );
   }
 
@@ -170,16 +173,28 @@ function CuerpoSesion({
 
   if (!sesion) {
     return (
-      <main className="flex-1 grid place-items-center text-sm text-ink-2">
-        {errorConexion || "Conectando con la sesión…"}
-      </main>
+      <MarcoEstudiante>
+        <div className="grid flex-1 place-items-center text-sm text-ink-2">
+          {errorConexion || "Conectando con la sesión…"}
+        </div>
+      </MarcoEstudiante>
     );
   }
 
   const cerrada = sesion.estado !== "abierta";
 
   return (
-    <main className="flex-1 w-full max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6">
+    <MarcoEstudiante
+      acciones={<BadgeEstado estado={sesion.estado} />}
+      pie={
+        <Link
+          href="/"
+          className="hover:text-white underline underline-offset-2"
+        >
+          ← Volver al inicio
+        </Link>
+      }
+    >
       <EncabezadoSesion sesion={sesion} nombre={contexto.nombre} />
 
       {errorConexion && (
@@ -214,13 +229,7 @@ function CuerpoSesion({
           {!supabaseConfigurado && <SimuladorFases pin={contexto.pin} />}
         </>
       )}
-
-      <footer className="mt-auto pt-6 text-xs text-ink-2">
-        <Link href="/" className="hover:text-navy underline underline-offset-2">
-          ← Volver al inicio
-        </Link>
-      </footer>
-    </main>
+    </MarcoEstudiante>
   );
 }
 
@@ -241,14 +250,12 @@ function EncabezadoSesion({
 }) {
   return (
     <header className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <Logo variant="color" height={36} />
-        <BadgeEstado estado={sesion.estado} />
-      </div>
       <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-teal">
         YLDC · Sesión {sesion.numeroSesion} · {sesion.curso}
       </p>
-      <h1 className="text-xl font-bold text-navy">{sesion.taller}</h1>
+      <h1 className="text-xl font-bold text-navy lg:text-[28px]">
+        {sesion.taller}
+      </h1>
       <p className="text-xs text-ink-2">
         Hola, {nombre.split(" ")[0]} — estás respondiendo como{" "}
         <span className="font-medium text-navy">{nombre}</span>
@@ -290,17 +297,20 @@ function FaseActiva({
   return (
     <section className="flex flex-col gap-5">
       {/* progresión de fases — barrita del diseño (dots + labels) */}
-      <Stepper current={indice as 0 | 1 | 2} />
+      <Stepper current={indice as 0 | 1 | 2} className="max-w-sm" />
 
-      {preguntas.map((p) => (
-        <PreguntaPiloto
-          key={p.id}
-          pregunta={p}
-          fase={fase}
-          contexto={contexto}
-          filaPrevio={mias.find((m) => m.tipo === fase && m.pregunta_id === p.id)}
-        />
-      ))}
+      {/* las tarjetas de la fase en fila en escritorio (mockup 1.4 / 1.6) */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(360px,1fr))]">
+        {preguntas.map((p) => (
+          <PreguntaPiloto
+            key={p.id}
+            pregunta={p}
+            fase={fase}
+            contexto={contexto}
+            filaPrevio={mias.find((m) => m.tipo === fase && m.pregunta_id === p.id)}
+          />
+        ))}
+      </div>
     </section>
   );
 }
@@ -559,7 +569,7 @@ function PantallaCerrada({
   alSalir: () => void;
 }) {
   return (
-    <section className="flex flex-col gap-5">
+    <section className="mx-auto flex w-full max-w-xl flex-col gap-5">
       <article className="bg-white rounded-2xl shadow-card p-8 text-center flex flex-col items-center gap-3">
         <div className="h-12 w-12 rounded-full bg-tint-teal grid place-items-center">
           <Check size={24} weight="bold" className="text-teal" />
