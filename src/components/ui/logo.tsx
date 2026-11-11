@@ -2,15 +2,14 @@ import Image from "next/image";
 
 /**
  * Logo oficial de Young Lives Development Center by Fondacio.
- * Extraído del brandboard oficial (Brandboard (2).jpg) con transparencia.
+ * Generado desde «00_Young_Lives_logo_sin_fondo.png»: figura blanca opaca
+ * con fondo transparente — correcta sobre navy y sobre fondos claros.
  *
- * Variantes y uso según fondo:
- *  - color:  multicolor (isotipo teal/rosa/amarillo + Space Cadet) → fondos claros. **Principal (default)**.
- *  - dark:   tinta blanca     → fondos oscuros (navy, rosa)
- *  - light:  Space Cadet      → fondos claros (versión monocroma p/ tamaños pequeños)
- *  - yellow: Sizzling Sunrise → fondos Space Cadet (como el bloque navy del brandboard)
- *  - rose:   Infra Red        → decorativa
- *  - teal:   Blue Green       → decorativa
+ * La variante solo cambia el color del texto:
+ *  - color:  navy → fondos claros. **Principal (default)**.
+ *  - dark:   blanco → fondos navy (paneles de los logins).
+ *  - light:  navy → versión monocroma p/ tamaños pequeños.
+ *  - yellow / rose / teal: texto en el color del token (decorativas).
  */
 
 export type LogoVariant =
@@ -21,8 +20,8 @@ export type LogoVariant =
   | "rose"
   | "teal";
 
-const LOGO_DIMS = { width: 449, height: 290 };
-const ISOTIPO_DIMS = { width: 245, height: 251 };
+const LOGO_DIMS = { width: 953, height: 600 };
+const ISOTIPO_DIMS = { width: 640, height: 687 };
 
 interface LogoProps {
   variant?: LogoVariant;
