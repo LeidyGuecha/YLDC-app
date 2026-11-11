@@ -483,9 +483,14 @@ as $$
 declare v_sesion uuid; v_curso uuid;
         v_item jsonb;
 begin
+  -- El test es a ritmo propio (300 ítems, con re-entrada) y puede seguir
+  -- después de que la sesión se cierre: basta con un PIN válido y que el
+  -- estudiante pertenezca al curso de esa sesión. Si se exigiera «abierta»,
+  -- el autoguardado moriría a mitad de test y el estudiante quedaría sin
+  -- poder calcular su código jamás.
   select s.id, s.curso_id into v_sesion, v_curso
-    from sesiones s where s.pin_acceso = p_pin and s.estado = 'abierta';
-  if not found then raise exception 'PIN inválido o sesión no abierta'; end if;
+    from sesiones s where s.pin_acceso = p_pin;
+  if not found then raise exception 'PIN inválido'; end if;
 
   if not exists (select 1 from estudiantes e
                   where e.id = p_estudiante_id and e.curso_id = v_curso and e.activo) then

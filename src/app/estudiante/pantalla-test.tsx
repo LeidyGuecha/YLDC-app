@@ -143,6 +143,13 @@ function CuerpoTest({
   }, [claves]);
 
   /* — envío de lote (los ids que quedan sucios) — */
+  // el lote SIEMPRE se arma contra las respuestas más recientes (el reintento
+  // de 2.5 s y el cálculo usan este ref, no un cierre viejo del callback)
+  const respuestasRef = useRef<Record<number, number>>({});
+  useEffect(() => {
+    respuestasRef.current = respuestas;
+  }, [respuestas]);
+
   const vaciar = useCallback(
     async (alGuardar?: () => void) => {
       const ids = [...queFaltan.current];
@@ -151,9 +158,10 @@ function CuerpoTest({
         return;
       }
       setEstadoLote("saving");
+      const actuales = respuestasRef.current;
       const pares = ids
-        .filter((id) => respuestas[id] !== undefined)
-        .map((id) => ({ preguntaId: id, respuesta: respuestas[id] }));
+        .filter((id) => actuales[id] !== undefined)
+        .map((id) => ({ preguntaId: id, respuesta: actuales[id] }));
       try {
         await guardarLoteTest(claves.pin, claves.estudianteId, pares);
         queFaltan.current = new Set();
@@ -165,7 +173,7 @@ function CuerpoTest({
         setAviso(mensajeAmable(error));
       }
     },
-    [claves.estudianteId, claves.pin, respuestas, estadoLote],
+    [claves.estudianteId, claves.pin, estadoLote],
   );
 
   // reintento suave: en error, vuelve a intentar cada 2.5 s mientras halla sucios
@@ -198,28 +206,45 @@ function CuerpoTest({
     };
   }, []);
 
+  const respondidas = Object.keys(respuestas).length;
+  const total = preguntas?.length ?? 300;
+  const completo = preguntas !== null && respondidas >= total;
+
   /* — calcular el código al completar — */
   const calcular = useCallback(async () => {
     setTrabajando(true);
     try {
       // si quedó algo sucio, vacía primero — el motor requiere 300 completas
       await vaciar();
+      if (queFaltan.current.size > 0) {
+        // el autoguardado sigue fallando: no llamar al motor a ciegas
+        setAviso(
+          "No pude guardar tus últimas respuestas (revisa tu conexión). Espera unos segundos e intenta de nuevo.",
+        );
+        return;
+      }
       const r = await calcularHolland(claves.pin, claves.estudianteId);
       setResultado(r);
     } catch (error) {
       if (error instanceof ErrorEstudiante && error.code === "FALTAN_PREGUNTAS") {
-        setAviso("Aún faltan preguntas por responder — vamos a la sección que queda pendiente.");
+        if (completo) {
+          // la pantalla dice 300/300 pero la base quedó corta: el
+          // autoguardado perdió pedazos (conexión / sesión cerrada)
+          setAviso(
+            "Algunas respuestas no quedaron guardadas. Espera unos segundos (reintentamos solo) y vuelve a calcular.",
+          );
+        } else {
+          setAviso(
+            "Aún faltan preguntas por responder — vamos a la sección que queda pendiente.",
+          );
+        }
       } else {
         setAviso(mensajeAmable(error));
       }
     } finally {
       setTrabajando(false);
     }
-  }, [claves.estudianteId, claves.pin, vaciar]);
-
-  const respondidas = Object.keys(respuestas).length;
-  const total = preguntas?.length ?? 300;
-  const completo = preguntas !== null && respondidas >= total;
+  }, [claves.estudianteId, claves.pin, vaciar, completo]);
 
   if (preguntas === null) {
     return (
