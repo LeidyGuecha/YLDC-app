@@ -648,7 +648,7 @@ function DetalleCurso({
               {generandoPdf ? (
                 <SpinnerGap size={12} className="animate-spin" />
               ) : null}
-              Descargar PDF
+              Descargar PDF individual
             </button>
           </div>
 
