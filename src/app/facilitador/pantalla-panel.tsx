@@ -855,6 +855,7 @@ function DetalleSesion({
               <thead>
                 <tr className="text-[11px] uppercase tracking-wide text-ink-2">
                   <th className="py-2 pr-3 font-medium">Estudiante</th>
+                  <th className="py-2 pr-3 font-medium">En línea</th>
                   <th className="py-2 pr-3 font-medium text-center">Cómo vengo</th>
                   <th className="py-2 pr-3 font-medium text-center">Actividad</th>
                   <th className="py-2 pr-3 font-medium text-center">Cómo voy</th>
@@ -882,6 +883,19 @@ function DetalleSesion({
                             <Badge variant="neutral" className="ml-2">
                               inactivo
                             </Badge>
+                          )}
+                        </td>
+                        <td className="py-2.5 pr-3">
+                          {enLinea.some((e) => e.id === est.id) ? (
+                            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-teal">
+                              <span className="h-1.5 w-1.5 rounded-full bg-teal" />
+                              En línea
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-[11px] text-ink-2">
+                              <span className="h-1.5 w-1.5 rounded-full bg-platinum" />
+                              No conectada
+                            </span>
                           )}
                         </td>
                         {(["como_vengo", "actividad", "como_voy"] as FaseSesionPanel[]).map(
@@ -927,7 +941,7 @@ function DetalleSesion({
                       </tr>
                       {abierto && (
                         <tr>
-                          <td colSpan={6} className="bg-tint-navy px-4 pb-3">
+                          <td colSpan={7} className="bg-tint-navy px-4 pb-3">
                             {respuestas.filter(
                               (r) => r.estudianteId === est.id,
                             ).length === 0 ? (

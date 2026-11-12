@@ -515,6 +515,19 @@ function NavegadorSecciones({
   const grupo = porSeccion[indice];
   const respondidasSeccion = grupo.items.filter((q) => respuestas[q.id] !== undefined).length;
 
+  // al cambiar de sección la vista salta al encabezado de la nueva: sin esto,
+  // tras dar "Siguiente sección" te quedas donde la última pregunta de la
+  // sección anterior y toca subir y subir hasta la primera de la nueva
+  const refSeccion = useRef<HTMLElement | null>(null);
+  const primeraVez = useRef(true);
+  useEffect(() => {
+    if (primeraVez.current) {
+      primeraVez.current = false;
+      return;
+    }
+    refSeccion.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [indice]);
+
   // primera sección con pendientes (para saltar al volver de un error)
   const saltarHacia = useCallback(
     (porFaltas: boolean) => {
@@ -552,7 +565,7 @@ function NavegadorSecciones({
         <MarcaLote estado={estadoLote} />
       </div>
 
-      <article className="bg-white rounded-2xl shadow-card p-6 flex flex-col gap-5">
+      <article ref={refSeccion} className="bg-white rounded-2xl shadow-card p-6 flex flex-col gap-5">
         <header className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-teal">

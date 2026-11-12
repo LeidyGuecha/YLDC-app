@@ -347,6 +347,10 @@ declare
   v_cantidad int;
   v_estudiante_id uuid;
   v_creado boolean := false;
+  -- nombre limpio: sin espacios a los costados y con espacios dobles colapsados
+  v_nombre text := regexp_replace(btrim(p_nombre), '\s+', ' ', 'g');
+  -- TI limpio: solo letras y números ("1.015.997.845" = "1015997845")
+  v_ti text := nullif(regexp_replace(coalesce(p_ti, ''), '[^0-9A-Za-z]', '', 'g'), '');
 begin
   select * into v_sesion from sesiones where pin_acceso = p_pin;
   if not found then
@@ -356,29 +360,48 @@ begin
     raise exception 'La sesión no está abierta';
   end if;
 
-  -- 1) match exacto nombre + TI (si TI viene) o solo nombre
+  -- 1) match por nombre normalizado (+ TI normalizado si viene)
   select * into v_match
     from estudiantes
     where curso_id = v_sesion.curso_id
       and activo
-      and lower(btrim(nombre_completo)) = lower(btrim(p_nombre))
-      and (p_ti is null or ti = btrim(p_ti))
+      and lower(regexp_replace(btrim(nombre_completo), '\s+', ' ', 'g')) = lower(v_nombre)
+      and (v_ti is null or regexp_replace(btrim(coalesce(ti, '')), '[^0-9A-Za-z]', '', 'g') = v_ti)
     order by consentimiento_aceptado desc
     limit 1;
 
   if found then
     v_estudiante_id := v_match.id;
+  elsif v_ti is not null then
+    -- 2) mismo TI, nombre con variantes ("pepito alejandro perez" con la
+    --    misma cédula de "Peppito Perez"): es la misma persona
+    select * into v_match
+      from estudiantes
+      where curso_id = v_sesion.curso_id
+        and activo
+        and regexp_replace(btrim(coalesce(ti, '')), '[^0-9A-Za-z]', '', 'g') = v_ti
+      order by consentimiento_aceptado desc
+      limit 1;
+    if found then
+      v_estudiante_id := v_match.id;
+    else
+      -- 3) nadie con ese TI: crear la fila nueva (TI queda normalizado)
+      insert into estudiantes (curso_id, nombre_completo, ti, origen)
+      values (v_sesion.curso_id, v_nombre, v_ti, 'registro_directo')
+      returning id into v_estudiante_id;
+      v_creado := true;
+    end if;
   else
-    -- 2) sin TI: ¿cuántos candidatos por nombre?
+    -- sin TI: ¿cuántos candidatos por nombre?
     select count(*) into v_cantidad
       from estudiantes
       where curso_id = v_sesion.curso_id
         and activo
-        and lower(btrim(nombre_completo)) = lower(btrim(p_nombre));
+        and lower(regexp_replace(btrim(nombre_completo), '\s+', ' ', 'g')) = lower(v_nombre);
 
     if v_cantidad = 0 then
       insert into estudiantes (curso_id, nombre_completo, ti, origen)
-      values (v_sesion.curso_id, btrim(p_nombre), nullif(btrim(p_ti), ''), 'registro_directo')
+      values (v_sesion.curso_id, v_nombre, null, 'registro_directo')
       returning id into v_estudiante_id;
       v_creado := true;
     elsif v_cantidad > 1 then
@@ -390,7 +413,7 @@ begin
         from estudiantes e
         where e.curso_id = v_sesion.curso_id
           and e.activo
-          and lower(btrim(e.nombre_completo)) = lower(btrim(p_nombre));
+          and lower(regexp_replace(btrim(e.nombre_completo), '\s+', ' ', 'g')) = lower(v_nombre);
     end if;
   end if;
 

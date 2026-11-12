@@ -41,6 +41,7 @@ import {
   type ReporteRespuesta,
 } from "@/lib/pdf/reporte";
 import { mensajeAmable } from "@/lib/estudiante/api";
+import { BATERIA_FASES } from "@/lib/estudiante/preguntas";
 import { supabaseConfigurado } from "@/lib/supabase/config";
 
 const ETIQUETA_FASE: Record<RespuestaPsicologa["tipo"], string> = {
@@ -48,6 +49,13 @@ const ETIQUETA_FASE: Record<RespuestaPsicologa["tipo"], string> = {
   actividad: "Actividad",
   como_voy: "Cómo voy",
 };
+
+/** pregunta_id → enunciado (del catálogo de fases; hoy es la sesión 4). */
+const ENUNCIADO_DE: Record<string, string> = Object.fromEntries(
+  Object.values(BATERIA_FASES).flatMap((lista) =>
+    lista.map((p) => [p.id, p.enunciado]),
+  ),
+);
 
 const ETIQUETA_ESTADO_SESION: Record<
   SesionPsicologa["estado"],
@@ -714,12 +722,17 @@ function DetalleCurso({
                         .map((r, i) => (
                           <li
                             key={`${r.sesionId}-${r.tipo}-${i}`}
-                            className="text-xs text-ink flex gap-2"
+                            className="text-xs text-ink flex flex-col gap-0.5"
                           >
-                            <span className="font-medium text-navy min-w-24">
+                            <span className="text-[11px] font-medium text-navy">
                               {ETIQUETA_FASE[r.tipo]}
+                              {r.preguntaId && ENUNCIADO_DE[r.preguntaId] && (
+                                <> · {ENUNCIADO_DE[r.preguntaId]}</>
+                              )}
                             </span>
-                            <span className="flex-1">{resumenFila(r)}</span>
+                            <span className="flex-1 pl-2 text-ink-2">
+                              {resumenFila(r)}
+                            </span>
                           </li>
                         ))}
                     </ul>

@@ -207,7 +207,7 @@ function CuerpoSesion({
       )}
 
       {cerrada ? (
-        <PantallaCerrada filas={mias} alSalir={alSalir} />
+        <PantallaCerrada alSalir={alSalir} />
       ) : (
         <>
           <FaseActiva contexto={contexto} sesion={sesion} mias={mias} />
@@ -657,10 +657,8 @@ function MarcaGuardado({ estado }: { estado: EstadoGuardado }) {
 /* ───────────────── Sesión cerrada (1.9 / 1.10) ───────────────── */
 
 function PantallaCerrada({
-  filas,
   alSalir,
 }: {
-  filas: FilaRespuesta[];
   alSalir: () => void;
 }) {
   return (
@@ -678,31 +676,6 @@ function PantallaCerrada({
           tu psicóloga.
         </p>
       </article>
-
-      {filas.length > 0 && (
-        <article className="bg-white rounded-2xl shadow-card p-6 flex flex-col gap-4">
-          <h3 className="text-sm font-semibold text-navy">
-            Lo que enviaste en esta sesión
-          </h3>
-          {ORDEN_FASES.map((fase) => {
-            const filasFase = filas.filter((f) => f.tipo === fase);
-            if (filasFase.length === 0) return null;
-            return (
-              <div key={fase} className="flex flex-col gap-2">
-                <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-teal">
-                  {ETIQUETA_FASE[fase]}
-                </p>
-                {filasFase.map((f, i) => (
-                  <p key={i} className="text-sm text-ink">
-                    {f.contenido_texto ??
-                      (f.contenido_seleccion_json ? "Tu clima quedó registrado" : "Tu checklist quedó registrado")}
-                  </p>
-                ))}
-              </div>
-            );
-          })}
-        </article>
-      )}
 
       <button
         type="button"
