@@ -99,3 +99,21 @@ export const NOMBRE_TIPOLOGIA: Record<Tipologia, string> = {
   E: "Emprendedor",
   C: "Convencional",
 };
+
+/*
+  Descripciones de cada tipología para la pantalla de resultado (el estudiante
+  lee la de cada una de sus 3 tipologías y luego responde si se reconoce).
+
+  ⚠️ BORRADOR propio (es-CO, para jóvenes) mientras Liliana entrega las
+  descripciones oficiales del instrumento. Están redactadas en segunda
+  persona a propósito: el estudiante debe poder decir "sí, me reconozco".
+  Para cambiarlas solo se edita este archivo (viajan con el front, no con la BD).
+*/
+export const DESCRIPCION_TIPOLOGIA: Record<Tipologia, string> = {
+  R: "Eres práctico y de manos a la obra: prefieres hacer y construir antes que solo hablar o mirar. Te va bien con herramientas, máquinas, plantas, animales o el deporte, y disfrutas cuando ves un resultado concreto de lo que hiciste. Aprendes mejor experimentando y te sientes cómodo con actividades físicas y retos que se tocan con las manos.",
+  I: "Eres curioso y analítico: te gusta preguntar el porqué de las cosas, observar, investigar y resolver misterios. Disfrutas los retos mentales, la ciencia y entender cómo funciona el mundo que te rodea. Prefieres pensar por tu cuenta y te va bien trabajar con ideas, datos y pruebas antes que con mucha gente alrededor.",
+  A: "Eres creativo y con imaginación: tienes tu propio estilo y te gusta expresarte con formas nuevas, ya sea con arte, música, escritura, video o diseño. Disfrutas los espacios libres donde puedes inventar, y prefieres pocas reglas: las ideas diferentes te fascinan y las tareas repetitivas te aburren.",
+  S: "Eres una persona que se preocupa por los demás: te gusta acompañar, escuchar, enseñar y ayudar a que otros crezcan. Disfrutas trabajando con personas, en equipo, y te mueve sentir que lo que haces le sirve a alguien. Te identifican la empatía, la paciencia y la capacidad de ponerte en el lugar del otro.",
+  E: "Te gusta liderar, proponer y convencer: disfrutas organizar proyectos, tomar decisiones y hacerte oír. Los retos y las metas te motivan, y sueñas con crear cosas propias como negocios, proyectos o equipos. Eres seguro de ti, te mueves bien con la gente y no te asusta hablar en público.",
+  C: "Eres ordenado y detallista: te gustan las cosas claras, organizadas y bien hechas. Manejas bien los datos, los números, los planes y las reglas, y disfrutas cuando todo funciona con estructura. Tu constancia y tu cuidado con el detalle son tu superpoder: la gente confía en ti porque cumples.",
+};

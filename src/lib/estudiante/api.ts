@@ -269,13 +269,24 @@ export async function verResultadoPropio(
 function parsearResultado(data: unknown): ResultadoHolland {
   const d = data as {
     codigo_holland: string;
-    tipologias: string[];
+    // fn_calcular_holland devuelve el array "tipologias";
+    // fn_ver_resultado_propio devuelve las 3 tipologías en campos sueltos.
+    tipologias?: string[];
+    tipologia_primaria?: string;
+    tipologia_secundaria?: string;
+    tipologia_terciaria?: string;
     puntajes: Record<string, number>;
     ranked_completo?: string;
   };
+  // normalizamos: cualquiera de las dos formas del RPC llega al mismo shape
+  const tipologias = d.tipologias ?? [
+    d.tipologia_primaria,
+    d.tipologia_secundaria,
+    d.tipologia_terciaria,
+  ];
   return {
     codigoHolland: d.codigo_holland,
-    tipologias: [d.tipologias[0], d.tipologias[1], d.tipologias[2]] as ResultadoHolland["tipologias"],
+    tipologias: [tipologias[0], tipologias[1], tipologias[2]] as ResultadoHolland["tipologias"],
     puntajes: {
       R: d.puntajes.R, I: d.puntajes.I, A: d.puntajes.A,
       S: d.puntajes.S, E: d.puntajes.E, C: d.puntajes.C,

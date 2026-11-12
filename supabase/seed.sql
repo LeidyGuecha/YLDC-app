@@ -70,35 +70,46 @@ insert into talleres (id, codigo, titulo, grado, numero_sesion, objetivo) values
    'Sesión 1 — Descubriendo mi proyecto de vida', 11, 1,
    'Abrir el ciclo: los jóvenes identifican sueños, expectativas y punto de partida.'),
   ('11111111-0000-0000-0000-000000000004', 'YC-04',
-   'Sesión 4 — ¿Cómo vengo? Mi punto de partida con los demás', 11, 4,
-   'Trabajar la fotografía de emociones (clima) y la reflexión inicial sobre vínculos.'),
+   'Sesión 4 — Tipología de Holland', 11, 4,
+   'Acompañar a los estudiantes en el reconocimiento de sus intereses, preferencias y características personales, a través de la Tipología de Holland, como una herramienta de apoyo para la orientación socio-ocupacional y la toma de decisiones sobre su futuro académico y laboral.'),
   ('11111111-0000-0000-0000-000000000005', 'YC-05',
    'Sesión 5 — ¿Cómo voy? Revisando mis avances', 11, 5,
    'Reconocer avances y tropiezos desde la actividad trabajada y redactar el estado de ruta.')
 on conflict (id) do nothing;
 
 -- ============================================================================
--- 5. PREGUNTAS DE ACTIVIDAD (muestras para el piloto; el catálogo completo
---    llega con el calendario de talleres de Liliana)
+-- 5. PREGUNTAS DE ACTIVIDAD (sesión 4 = flujo narrado por Leidy; ids fijos
+--    usados por el front. 0006/0007 son del taller YC-01; las nuevas de
+--    YC-04 van de 0008 a 000d)
 -- ============================================================================
 insert into preguntas_actividad (id, taller_id, orden, enunciado, tipo, configuracion_json) values
   ('22222222-0000-0000-0000-000000000001', '11111111-0000-0000-0000-000000000004', 1,
    '¿Cómo vienes hoy?', 'seleccion',
-   '{"opciones":[{"id":"soleado","texto":"Soleado"},{"id":"nublado","texto":"Nublado"},{"id":"lluvioso","texto":"Lluvioso"},{"id":"tormenta","texto":"Tormenta"}]}'),
+   '{"opciones":[{"id":"soleado","texto":"Soleado"},{"id":"parcial","texto":"Parcialmente soleado"},{"id":"nublado","texto":"Nublado"},{"id":"lluvioso","texto":"Lluvioso"},{"id":"tormenta","texto":"Tormenta"}]}'),
   ('22222222-0000-0000-0000-000000000002', '11111111-0000-0000-0000-000000000004', 2,
-   'Escribe sobre cómo vienes: ¿qué está pasando en tu vida en este momento?', 'texto',
-   '{"min_caracteres":200}'),
-  ('22222222-0000-0000-0000-000000000003', '11111111-0000-0000-0000-000000000004', 3,
-   'Marca las actividades que hiciste en la sesión', 'checklist',
-   '{"opciones":[{"id":"clima","texto":"Marcar mi clima"},{"id":"historia","texto":"Escuchar la historia de otro compañero"},{"id":"reflexion","texto":"Escribir mi reflexión"},{"id":"consejo","texto":"Enviar o recibir un consejo"}]}'),
-  ('22222222-0000-0000-0000-000000000004', '11111111-0000-0000-0000-000000000004', 4,
-   'Completa la frase: "Hoy me sorprendió que…"', 'frase_a_completar', null),
-  ('22222222-0000-0000-0000-000000000005', '11111111-0000-0000-0000-000000000004', 5,
-   '¿Cómo voy? ¿Qué te llevaste de la sesión?', 'texto',
-   '{"min_caracteres":200}'),
+   '¿Por qué escogiste este clima?', 'texto',
+   '{"opcional":true}'),
+  ('22222222-0000-0000-0000-000000000008', '11111111-0000-0000-0000-000000000004', 3,
+   'Cuando lees la descripción del perfil de tu personalidad, ¿te reconoces en ella? ¿Por qué?', 'texto',
+   '{"min_caracteres":30}'),
+  ('22222222-0000-0000-0000-000000000009', '11111111-0000-0000-0000-000000000004', 4,
+   '¿Con qué puntos de la descripción estás de acuerdo?', 'texto',
+   '{"min_caracteres":30}'),
+  ('22222222-0000-0000-0000-00000000000a', '11111111-0000-0000-0000-000000000004', 5,
+   '¿Con qué puntos no estás de acuerdo?', 'texto',
+   '{"min_caracteres":30}'),
+  ('22222222-0000-0000-0000-00000000000b', '11111111-0000-0000-0000-000000000004', 6,
+   '¿Coincide la descripción de tu perfil con la carrera que quieres estudiar? ¿Por qué?', 'texto',
+   '{"min_caracteres":30}'),
+  ('22222222-0000-0000-0000-00000000000c', '11111111-0000-0000-0000-000000000004', 7,
+   'Escribe una característica personal asociada a tu tipología que quieras potenciar.', 'texto',
+   '{"min_caracteres":30}'),
+  ('22222222-0000-0000-0000-00000000000d', '11111111-0000-0000-0000-000000000004', 8,
+   'Escribe una característica que quieras cambiar o mejorar para tu desarrollo personal y vocacional.', 'texto',
+   '{"min_caracteres":30}'),
   ('22222222-0000-0000-0000-000000000006', '11111111-0000-0000-0000-000000000001', 1,
    '¿Cómo vienes hoy?', 'seleccion',
-   '{"opciones":[{"id":"soleado","texto":"Soleado"},{"id":"nublado","texto":"Nublado"},{"id":"lluvioso","texto":"Lluvioso"},{"id":"tormenta","texto":"Tormenta"}]}'),
+   '{"opciones":[{"id":"soleado","texto":"Soleado"},{"id":"parcial","texto":"Parcialmente soleado"},{"id":"nublado","texto":"Nublado"},{"id":"lluvioso","texto":"Lluvioso"},{"id":"tormenta","texto":"Tormenta"}]}'),
   ('22222222-0000-0000-0000-000000000007', '11111111-0000-0000-0000-000000000001', 2,
    'Describe un sueño que tengas para tu vida.', 'texto', '{"min_caracteres":200}')
 on conflict (id) do nothing;

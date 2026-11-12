@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  CloudLightning,
   CloudSun,
   Sun,
   Cloud,
@@ -21,6 +22,7 @@ import {
   guardarRespuestaFase,
   mostrarSesionInfo,
   supabaseConfigurado,
+  verResultadoPropio,
 } from "@/lib/estudiante/api";
 import {
   alSimularCambio,
@@ -42,13 +44,15 @@ import {
   type FaseSesion,
   type FilaRespuesta,
   type InfoSesion,
+  type ResultadoHolland,
 } from "@/lib/estudiante/types";
 
 /*
-  Sesión en vivo del estudiante (pantallas 1.3–1.10):
-   · fase como_vengo → clima + reflexión (1.4)
-   · fase actividad  → checklist + frase a completar (1.5)
-   · fase como_voy   → reflexión final (1.6)
+  Sesión en vivo del estudiante (pantallas 1.3–1.10), flujo de la sesión 4:
+   · fase como_vengo → clima (5 opciones) + porqué del clima (voluntaria) (1.4)
+   · fase actividad  → primero el test de Holland (tarjeta-puerta) y luego las
+     4 preguntas de reflexión sobre la descripción de su perfil (1.5)
+   · fase como_voy   → 1 característica a potenciar + 1 a cambiar/mejorar (1.6)
    · sus respuestas se AUTOguardan por pregunta (fn_guardar_respuesta es upsert)
    · el estado/fase se sondea cada 10 s (en real) o lo mueve el simulador (demo)
    · al cerrar la sesión: pantalla de gracias + resumen propio (1.9/1.10)
@@ -294,10 +298,35 @@ function FaseActiva({
   const preguntas = BATERIA_FASES[fase];
   const indice = ORDEN_FASES.indexOf(fase);
 
+  // Puerta del test (flujo sesión 4): en la fase de actividad las preguntas
+  // se activan cuando la estudiante ya calculó su código de Holland.
+  const [resultado, setResultado] = useState<ResultadoHolland | null>(null);
+  useEffect(() => {
+    if (fase !== "actividad") {
+      setResultado(null);
+      return;
+    }
+    let vigente = true;
+    verResultadoPropio(contexto.pin, contexto.estudianteId)
+      .then((r) => {
+        if (vigente) setResultado(r);
+      })
+      .catch(() => {
+        if (vigente) setResultado(null);
+      });
+    return () => {
+      vigente = false;
+    };
+  }, [fase, contexto.pin, contexto.estudianteId]);
+  const testListo = resultado !== null;
+
   return (
     <section className="flex flex-col gap-5">
       {/* progresión de fases — barrita del diseño (dots + labels) */}
       <Stepper current={indice as 0 | 1 | 2} className="max-w-sm" />
+
+      {/* paso 1 de la actividad: el test de Holland (tal cual el flujo de la sesión 4) */}
+      {fase === "actividad" && <PuertaTest resultado={resultado} />}
 
       {/* las tarjetas de la fase en fila en escritorio (mockup 1.4 / 1.6) */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(360px,1fr))]">
@@ -308,10 +337,64 @@ function FaseActiva({
             fase={fase}
             contexto={contexto}
             filaPrevio={mias.find((m) => m.tipo === fase && m.pregunta_id === p.id)}
+            bloqueada={fase === "actividad" && !testListo}
           />
         ))}
       </div>
     </section>
+  );
+}
+
+/* ───────────────── Puerta del test (fase actividad — sesión 4) ───────────────── */
+
+function PuertaTest({ resultado }: { resultado: ResultadoHolland | null }) {
+  return (
+    <article className="bg-white rounded-2xl shadow-card p-6 flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 shrink-0 rounded-full bg-tint-teal grid place-items-center">
+          <Lightning size={18} className="text-teal" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-navy">
+            Paso 1 — Responde el test de Tipología Holland
+          </p>
+          <p className="text-xs text-ink-2">
+            Al terminarlo se calcula tu código y ves la descripción de cada
+            tipología. Respóndelo con honestidad: no hay resultados buenos ni
+            malos.
+          </p>
+        </div>
+      </div>
+
+      {resultado ? (
+        <div className="rounded-xl bg-tint-teal px-4 py-3 flex items-center gap-3 flex-wrap">
+          <p className="text-sm text-navy flex-1 min-w-[14rem]">
+            ¡Listo! Tu código es{" "}
+            <span className="font-bold tracking-[0.15em]">
+              {resultado.codigoHolland}
+            </span>
+          </p>
+          <Link
+            href="/estudiante/test"
+            className="h-9 px-4 inline-flex items-center text-sm rounded-xl border border-navy text-navy bg-white hover:bg-tint-navy transition-colors"
+          >
+            Ver mi resultado
+          </Link>
+        </div>
+      ) : (
+        <Link
+          href="/estudiante/test"
+          className="self-start h-10 px-5 inline-flex items-center text-sm rounded-xl bg-navy text-white hover:opacity-90 transition-opacity"
+        >
+          Ir al test
+        </Link>
+      )}
+
+      <p className="text-xs text-ink-2">
+        Después del test viene la actividad en grupo: el cartel de tu tipología
+        es presencial, con tus facilitadores.
+      </p>
+    </article>
   );
 }
 
@@ -348,11 +431,14 @@ function PreguntaPiloto({
   fase,
   contexto,
   filaPrevio,
+  bloqueada = false,
 }: {
   pregunta: PreguntaFase;
   fase: FaseSesion;
   contexto: ContextoEstudiante;
   filaPrevio?: FilaRespuesta;
+  /** En la sesión 4: preguntas de actividad cerradas hasta terminar el test. */
+  bloqueada?: boolean;
 }) {
   // useMemo innecesario: el initializer perezoso del useState basta
   const [valor, setValor] = useState<ValorPregunta>(() =>
@@ -402,9 +488,18 @@ function PreguntaPiloto({
   }
 
   return (
-    <article className="bg-white rounded-2xl shadow-card p-6 flex flex-col gap-4">
+    <article
+      className={`bg-white rounded-2xl shadow-card p-6 flex flex-col gap-4 ${
+        bloqueada ? "opacity-60" : ""
+      }`}
+    >
       <header className="flex items-start justify-between gap-3">
         <p className="text-sm font-semibold text-navy">{pregunta.enunciado}</p>
+        {pregunta.opcional && (
+          <span className="text-[11px] font-medium text-teal shrink-0 pt-0.5">
+            Voluntaria
+          </span>
+        )}
         <MarcaGuardado estado={guardado} />
       </header>
 
@@ -417,12 +512,15 @@ function PreguntaPiloto({
               <button
                 key={o.id}
                 type="button"
+                disabled={bloqueada}
                 onClick={() => actualizar({ seleccion: o.id }, true)}
                 aria-pressed={activo}
-                className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-4 text-sm transition-colors cursor-pointer ${
-                  activo
-                    ? "border-navy bg-tint-navy text-navy font-medium"
-                    : "border-stroke text-ink hover:border-navy/60 hover:bg-tint-pink"
+                className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-4 text-sm transition-colors ${
+                  bloqueada
+                    ? "border-stroke text-ink cursor-not-allowed"
+                    : activo
+                    ? "border-navy bg-tint-navy text-navy font-medium cursor-pointer"
+                    : "border-stroke text-ink hover:border-navy/60 hover:bg-tint-pink cursor-pointer"
                 }`}
               >
                 <IconoClima icono={o.icono} activo={activo} />
@@ -474,26 +572,40 @@ function PreguntaPiloto({
         </div>
       )}
 
-      {/* — texto libre (200+ caracteres) — */}
+      {/* — texto libre (con mínimo si lo trae la pregunta) — */}
       {pregunta.tipo === "texto" && (
         <div className="flex flex-col gap-1.5">
           <textarea
             rows={5}
             value={valor.texto}
-            placeholder="Tómate tu tiempo — lo que escribas ayuda a tu facilitador y a tu psicóloga a acompañarte."
+            disabled={bloqueada}
+            placeholder={
+              pregunta.opcional
+                ? "Si quieres, cuéntanoslo — es voluntaria."
+                : "Tómate tu tiempo — lo que escribas ayuda a tu facilitador y a tu psicóloga a acompañarte."
+            }
             onChange={(e) => actualizar({ texto: e.target.value })}
-            className="w-full px-4 text-sm rounded-lg border border-stroke bg-white text-ink placeholder:text-ink-disabled focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal"
-          />
-          <span
-            className={`text-xs ${
-              pregunta.minCaracteres && valor.texto.length >= pregunta.minCaracteres
-                ? "text-teal"
-                : "text-ink-2"
+            className={`w-full px-4 text-sm rounded-lg border border-stroke bg-white text-ink placeholder:text-ink-disabled focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal ${
+              bloqueada ? "cursor-not-allowed" : ""
             }`}
-          >
-            {valor.texto.length} / {pregunta.minCaracteres} mínimo — se guarda
-            solo mientras escribes
-          </span>
+          />
+          {pregunta.minCaracteres ? (
+            <span
+              className={`text-xs ${
+                valor.texto.length >= pregunta.minCaracteres
+                  ? "text-teal"
+                  : "text-ink-2"
+              }`}
+            >
+              {valor.texto.length} / {pregunta.minCaracteres} mínimo — se guarda
+              solo mientras escribes
+            </span>
+          ) : (
+            <span className="text-xs text-ink-2">
+              Voluntaria — puedes dejarla vacía; si escribes, se guarda mientras
+              lo haces
+            </span>
+          )}
         </div>
       )}
 
@@ -520,7 +632,7 @@ function IconoClima({
   icono,
   activo,
 }: {
-  icono?: "soleado" | "nublado" | "lluvioso" | "tormenta";
+  icono?: "soleado" | "parcial" | "nublado" | "lluvioso" | "tormenta";
   activo: boolean;
 }) {
   const tamano = 28;
@@ -528,12 +640,14 @@ function IconoClima({
   switch (icono) {
     case "soleado":
       return <Sun size={tamano} color={color} weight="fill" />;
-    case "nublado":
+    case "parcial":
       return <CloudSun size={tamano} color={color} />;
+    case "nublado":
+      return <Cloud size={tamano} color={color} />;
     case "lluvioso":
       return <CloudRain size={tamano} color={color} />;
     case "tormenta":
-      return <Cloud size={tamano} color={color} />; // Thunder pide fill — Cloud de transición
+      return <CloudLightning size={tamano} color={color} />;
     default:
       return null;
   }

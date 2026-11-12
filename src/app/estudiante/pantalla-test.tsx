@@ -23,6 +23,7 @@ import {
   verResultadoPropio,
 } from "@/lib/estudiante/api";
 import {
+  DESCRIPCION_TIPOLOGIA,
   INSTRUCCION_SECCION,
   NOMBRE_TIPOLOGIA,
   OPCIONES_APTITUD,
@@ -649,8 +650,8 @@ function VistaResultado({
         </div>
         <h2 className="text-lg font-bold text-navy">¡Completaste el test!</h2>
         <p className="text-sm text-ink-2 max-w-sm">
-          Este es tu código de intereses según Holland. En tu próxima sesión
-          conocerás qué significa para tu proyecto de vida.
+          Este es tu código de intereses según Holland. Abajo está lo que
+          significa cada una de tus tres tipologías.
         </p>
         <p className="text-4xl font-bold text-navy tracking-[0.15em] pt-2">
           {resultado.codigoHolland}
@@ -662,6 +663,28 @@ function VistaResultado({
             </span>
           ))}
         </div>
+      </article>
+
+      {/* descripción de cada tipología del resultado (flujo sesión 4) */}
+      <article className="bg-white rounded-2xl shadow-card p-6 flex flex-col gap-4">
+        <h3 className="text-sm font-semibold text-navy">
+          Tu perfil en detalle
+        </h3>
+        {resultado.tipologias.map((t, i) => (
+          <div
+            key={t}
+            className={`rounded-xl p-4 flex flex-col gap-1.5 ${
+              i === 0 ? "bg-tint-teal" : "bg-platinum/60"
+            }`}
+          >
+            <p className="text-sm font-semibold text-navy">
+              {i + 1} · {t} · {NOMBRE_TIPOLOGIA[t]}
+            </p>
+            <p className="text-sm text-ink leading-relaxed">
+              {DESCRIPCION_TIPOLOGIA[t]}
+            </p>
+          </div>
+        ))}
       </article>
 
       <article className="bg-white rounded-2xl shadow-card p-6 flex flex-col gap-3">
