@@ -565,6 +565,27 @@ function DetalleSesion({
     };
   }, [sesion.id, sesion.cursoId]);
 
+  // Red de seguridad del monitoreo: refresco periódico cada 5 s mientras la
+  // pestaña está visible. El realtime entrega los cambios al instante, pero si
+  // un evento se pierde (conexión inestable o publication incompleta), el
+  // panel se pone al día solo — el demo no puede depender de la suerte.
+  useEffect(() => {
+    const id = sesion.id;
+    const t = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      void listarRespuestasDeSesion(id)
+        .then(setRespuestas)
+        .catch(() => {});
+      void listarProgresoTest(id)
+        .then(setProgreso)
+        .catch(() => {});
+      void listarResultadosHolland(id)
+        .then(setResultados)
+        .catch(() => {});
+    }, 5000);
+    return () => clearInterval(t);
+  }, [sesion.id]);
+
   // PRESENCIA: quiénes tienen la pantalla del estudiante abierta ahora mismo.
   // La estudiante se registra con canal.track (key = su id) y decae al cerrar.
   useEffect(() => {
@@ -582,12 +603,18 @@ function DetalleSesion({
         presencias.map((p) => ({ id: p.estudiante_id, nombre: p.nombre })),
       );
       setEnLinea(lista);
+      // Al ver a alguien conectado releemos la plantilla del curso: si una
+      // estudiante acaba de identificarse (auto-registro), su fila aparece
+      // aunque el evento de inserción de realtime se haya perdido.
+      void listarEstudiantesDeCurso(sesion.cursoId)
+        .then(setEstudiantes)
+        .catch(() => {});
     });
     canal.subscribe();
     return () => {
       void sb.removeChannel(canal);
     };
-  }, [sesion.id]);
+  }, [sesion.id, sesion.cursoId]);
 
   async function alFase(fase: FaseSesionPanel) {
     if (fase === sesion.faseActual) return;

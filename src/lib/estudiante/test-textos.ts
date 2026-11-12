@@ -26,8 +26,7 @@ export const TITULO_SECCION: Record<SeccionTest, string> = {
   personalidad: "PERSONALIDAD",
 };
 
-export const INSTRUCCION_SECCION: Record<SeccionTest, string> = {
-  intereses_actividades:
+export const INSTRUCCION_SECCION: Record<SeccionTest, string> = {  intereses_actividades:
     "Aquí hay una lista de actividades. Pon el número 1 (uno) en las casillas " +
     "que se refieren a las actividades que te gustan o te gustaría hacer. " +
     "Es importante no poner un 0 (cero) si NO te gusta o no te interesa la " +
@@ -57,6 +56,22 @@ export const INSTRUCCION_SECCION: Record<SeccionTest, string> = {
     "actividad. Al rellenar este apartado, considera que tienes las " +
     "habilidades, los conocimientos y la formación necesarios para realizar " +
     "estas actividades. Ten en cuenta sólo tus gustos.",
+};
+
+/*
+  Resumen corto de cada sección (lo que ve la estudiante al entrar a la etapa).
+  Lenguaje llano para jóvenes; la instrucción oficial verbatim del Excel queda
+  arriba en INSTRUCCION_SECCION por si Liliana prefiere mostrarla.
+*/
+export const RESUMEN_SECCION: Record<SeccionTest, string> = {
+  intereses_actividades:
+    "Pon «Me gusta» en las actividades que te gustaría hacer y «No me gusta» en las que no. Piensa solo en tus gustos.",
+  intereses_ocupaciones:
+    "Pon «Me gusta» en los trabajos que te llaman la atención y «No me gusta» en los que no. Imagina que sí podrías hacerlos.",
+  aptitudes:
+    "Califica qué tan bien crees que lo haces: Débil, Medio o Fuerte. Sé sincero contigo mismo.",
+  personalidad:
+    "Lee cada frase y marca cuánto se parece a ti: Como yo, Algo como yo o No es como yo.",
 };
 
 /** Opciones visuales por tipo de respuesta (el valor va a respuestas_test_holland). */

@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Lightning,
+  MagicWand,
   Medal,
 } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui";
@@ -24,12 +25,12 @@ import {
 } from "@/lib/estudiante/api";
 import {
   DESCRIPCION_TIPOLOGIA,
-  INSTRUCCION_SECCION,
   NOMBRE_TIPOLOGIA,
   OPCIONES_APTITUD,
   OPCIONES_BINARIO,
   OPCIONES_PERSONALIDAD,
   ORDEN_SECCIONES,
+  RESUMEN_SECCION,
   TITULO_INSTRUMENTO,
   TITULO_SECCION,
 } from "@/lib/estudiante/test-textos";
@@ -247,6 +248,43 @@ function CuerpoTest({
     }
   }, [claves.estudianteId, claves.pin, vaciar, completo]);
 
+  /* — TEMPORAL para el demo del 13/11 con Liliana: llena al azar las
+     respuestas que faltan del test (no se pidió en el flujo real). — */
+  const llenarDemo = useCallback(async () => {
+    if (!preguntas) return;
+    if (
+      !window.confirm(
+        "Modo demo: se llenarán al azar las respuestas que faltan del test de Holland. ¿Continuar?",
+      )
+    ) {
+      return;
+    }
+    setTrabajando(true);
+    try {
+      const pares = preguntas
+        .filter((q) => respuestasRef.current[q.id] === undefined)
+        .map((q) => ({
+          preguntaId: q.id,
+          respuesta:
+            q.tipoRespuesta === "binario"
+              ? Math.floor(Math.random() * 2) // 0 o 1: No me gusta / Me gusta
+              : 1 + Math.floor(Math.random() * 3), // escala 1-3: aptitud / personalidad
+        }));
+      if (pares.length === 0) return;
+      await guardarLoteTest(claves.pin, claves.estudianteId, pares);
+      setRespuestas((prev) => {
+        const nuevo = { ...prev };
+        for (const p of pares) nuevo[p.preguntaId] = p.respuesta;
+        return nuevo;
+      });
+      setEstadoLote("saved");
+    } catch (error) {
+      setAviso(mensajeAmable(error));
+    } finally {
+      setTrabajando(false);
+    }
+  }, [preguntas, claves.estudianteId, claves.pin]);
+
   if (preguntas === null) {
     return (
       <MarcoEstudiante>
@@ -302,7 +340,18 @@ function CuerpoTest({
       }
     >
       <EncabezadoTest contexto={contexto} />
-      <IntroInstrumento respondidas={respondidas} total={total} completo={completo} />
+      <IntroInstrumento
+        respondidas={respondidas}
+        total={total}
+        completo={completo}
+        conteos={
+          Object.fromEntries(
+            porSeccion.map((g) => [g.seccion, g.items.length]),
+          ) as Record<SeccionTest, number>
+        }
+        llenando={trabajando}
+        alLlenarDemo={() => void llenarDemo()}
+      />
       {aviso && (
         <p className="text-xs text-pink bg-tint-pink rounded-lg px-4 py-2">{aviso}</p>
       )}
@@ -355,16 +404,23 @@ function EncabezadoTest({ contexto }: { contexto: ContextoEstudiante }) {
   );
 }
 
-/* ───────────────── Intro con instrucciones por sección ───────────────── */
+/* ───────────────── Intro con las 4 etapas en compacto ───────────────── */
 
 function IntroInstrumento({
   respondidas,
   total,
   completo,
+  conteos,
+  llenando,
+  alLlenarDemo,
 }: {
   respondidas: number;
   total: number;
   completo: boolean;
+  /** cantidad de ítems por sección, para el chip de cada etapa */
+  conteos: Record<SeccionTest, number>;
+  llenando: boolean;
+  alLlenarDemo: () => void;
 }) {
   return (
     <article className="bg-white rounded-2xl shadow-card p-6 flex flex-col gap-4">
@@ -379,19 +435,47 @@ function IntroInstrumento({
           </p>
         </div>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {ORDEN_SECCIONES.map((s) => (
-          <div key={s} className="rounded-xl border border-stroke p-4">
-            <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-teal">
+      {/* las 4 etapas en compacto: el cómo responder se explica al entrar a cada una */}
+      <div className="grid gap-2 sm:grid-cols-2">
+        {ORDEN_SECCIONES.map((s, i) => (
+          <div
+            key={s}
+            className="rounded-xl border border-stroke px-4 py-2.5 flex items-center gap-2.5"
+          >
+            <span className="h-5 w-5 shrink-0 rounded-full bg-tint-teal grid place-items-center text-[11px] font-semibold text-navy">
+              {i + 1}
+            </span>
+            <p className="text-xs font-medium text-navy flex-1">
               {TITULO_SECCION[s]}
             </p>
-            <p className="mt-1 text-xs text-ink">{INSTRUCCION_SECCION[s]}</p>
+            <span className="text-[11px] text-ink-2 tabular-nums">
+              {conteos[s]} ítems
+            </span>
           </div>
         ))}
       </div>
       <p className="text-[11px] text-ink-2">
         Se guarda solo mientras avanzas — puedes salir y regresar otro día.
       </p>
+
+      {/* TEMPORAL — solo para el demo del 13/11 con Liliana: llena al azar las
+          respuestas que faltan para no responder las 300 en vivo. Se quita
+          después del demo (leidy lo pidió "solo por mañana"). */}
+      {!completo && (
+        <button
+          type="button"
+          onClick={alLlenarDemo}
+          disabled={llenando}
+          className="self-start h-8 px-3 text-xs rounded-lg border border-dashed border-ink-2 text-ink-2 bg-white hover:bg-tint-pink transition-colors disabled:opacity-50 inline-flex items-center gap-1.5 cursor-pointer"
+        >
+          {llenando ? (
+            <SpinnerGap size={13} className="animate-spin" />
+          ) : (
+            <MagicWand size={13} />
+          )}
+          Modo demo — llenar al azar lo que falta ({total - respondidas})
+        </button>
+      )}
     </article>
   );
 }
@@ -478,7 +562,7 @@ function NavegadorSecciones({
               {respondidasSeccion}/{grupo.items.length}
             </span>
           </div>
-          <p className="text-xs text-ink">{INSTRUCCION_SECCION[grupo.seccion]}</p>
+          <p className="text-xs text-ink">{RESUMEN_SECCION[grupo.seccion]}</p>
           {/* barra de la sección */}
           <div className="h-1 rounded-full bg-platinum overflow-hidden">
             <div
