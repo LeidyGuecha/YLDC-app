@@ -829,7 +829,7 @@ function DetalleSesion({
             Monitoreo en vivo ({
               estudiantes.filter((e) => e.activo).length
             }{" "}
-            estudiantes activos)
+            estudiantes del curso)
           </h3>
           <Badge variant="pinkSoft" dot>tiempo real</Badge>
         </div>
