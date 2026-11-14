@@ -62,6 +62,26 @@ const MARGEN = 18;
 const PAGA_HASTA = 278; // y máxima útil
 const ANCHO_BARRA = 70;
 
+let logoPromesa: Promise<Uint8Array> | null = null;
+
+function cargarLogo(): Promise<Uint8Array> {
+  if (!logoPromesa) {
+    logoPromesa = fetch("/logo/logo-yldc-color.png")
+      .then((respuesta) => {
+        if (!respuesta.ok) {
+          throw new Error(`No se pudo cargar el logo del reporte (${respuesta.status}).`);
+        }
+        return respuesta.arrayBuffer();
+      })
+      .then((bytes) => new Uint8Array(bytes))
+      .catch((error: unknown) => {
+        logoPromesa = null;
+        throw error;
+      });
+  }
+  return logoPromesa;
+}
+
 export function nombreArchivoEstudiante(nombre: string, indice?: number): string {
   const limpio = nombre
     .normalize("NFD")
@@ -79,6 +99,7 @@ export async function bytesPdfEstudiante(
 ): Promise<Uint8Array> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const logo = await cargarLogo();
 
   let y = 0;
 
@@ -92,13 +113,13 @@ export async function bytesPdfEstudiante(
 
   /* ── encabezado de marca ── */
   banda(NAVY, 22);
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(MARGEN, 1.75, 35, 18.5, 2, 2, "F");
+  doc.addImage(logo, "PNG", MARGEN + 2, 2.5, 31, 17.9);
   doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(17);
-  doc.text("YLDC", MARGEN, 12.5);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
-  doc.text("Sistema de diseño YLDC — UCatólica × Fondacio Colombia", MARGEN, 17.5);
+  doc.text("Sistema de diseño YLDC — UCatólica × Fondacio Colombia", 58, 17.5);
   doc.text("Reporte individual del estudiante", ANCHO - MARGEN, 12.5, {
     align: "right",
   });
@@ -231,7 +252,7 @@ export async function bytesPdfEstudiante(
       MARGEN,
       y,
     );
-    y += 1.5;
+    y += 6;
     parrafo(d.comentarioIndividual.texto, { gris: false });
   }
 
