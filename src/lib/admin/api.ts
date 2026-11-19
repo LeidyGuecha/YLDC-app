@@ -331,13 +331,81 @@ export async function listarAudit(limite = 120): Promise<RegistroAudit[]> {
       accion: r.accion,
       entidad: r.entidad,
       entidadId: r.entidad_id,
-      detalles:
-        r.detalles === null || r.detalles === undefined
-          ? null
-          : String(r.detalles),
+      detalles: describirDetalles(r.detalles),
       adminNombre: r.admin?.nombre_completo ?? "Admin",
     };
   });
+}
+
+/** Etiquetas legibles para las claves que aparecen en audit_log.detalles. */
+const ETIQUETA_CAMPO: Record<string, string> = {
+  nombre: "nombre",
+  nombre_completo: "nombre",
+  localidad: "localidad",
+  archivo: "archivo",
+  creados: "creados",
+  omitidos: "omitidos",
+  coincidencias: "coincidencias",
+  correo: "correo",
+  grado: "grado",
+  anio: "año",
+  activo: "activo",
+  activa: "activa",
+};
+
+/** Valor de un campo como texto corto (sin UUIDs ni objetos crudos). */
+function valorLegible(v: unknown): string | null {
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v === "boolean") return v ? "sí" : "no";
+  if (typeof v === "number") return String(v);
+  if (typeof v === "string") {
+    // un UUID suelto no le dice nada al admin
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v))
+      return null;
+    return v;
+  }
+  if (Array.isArray(v)) {
+    const partes = v.map(valorLegible).filter(Boolean);
+    return partes.length ? partes.join(", ") : null;
+  }
+  if (typeof v === "object") return describirCampos(v as Record<string, unknown>);
+  return null;
+}
+
+/** "nombre: X · localidad: Y" a partir de un objeto plano. */
+function describirCampos(obj: Record<string, unknown>): string | null {
+  const partes: string[] = [];
+  for (const [k, v] of Object.entries(obj)) {
+    if (k.endsWith("_id") || k === "id") continue;
+    const val = valorLegible(v);
+    if (val === null) continue;
+    partes.push(`${ETIQUETA_CAMPO[k] ?? k.replace(/_/g, " ")}: ${val}`);
+  }
+  return partes.length ? partes.join(" · ") : null;
+}
+
+/**
+ * Convierte el jsonb de audit_log.detalles en una frase legible.
+ * Formatos conocidos: {texto} (escrito por la app) y {antes, despues}
+ * (seed / cambios). Antes se hacía String(obj) → "[object Object]".
+ */
+function describirDetalles(d: unknown): string | null {
+  if (d === null || d === undefined) return null;
+  if (typeof d !== "object" || Array.isArray(d)) return valorLegible(d);
+  const o = d as Record<string, unknown>;
+  if (typeof o.texto === "string") return o.texto || null;
+  const antes =
+    o.antes && typeof o.antes === "object"
+      ? describirCampos(o.antes as Record<string, unknown>)
+      : null;
+  const despues =
+    o.despues && typeof o.despues === "object"
+      ? describirCampos(o.despues as Record<string, unknown>)
+      : null;
+  if (antes && despues) return `antes: ${antes} → ahora: ${despues}`;
+  if (despues) return despues;
+  if (antes) return `antes: ${antes}`;
+  return describirCampos(o);
 }
 
 /** Registra la acción del admin en el audit_log (pantalla 4.8). */
