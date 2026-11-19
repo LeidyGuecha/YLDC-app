@@ -43,6 +43,13 @@ import {
   type SeccionTest,
 } from "@/lib/estudiante/types";
 
+/* Botón "llenar al azar" (herramienta de demo): visible solo en desarrollo
+   (`npm run dev`), o en un despliegue si se define NEXT_PUBLIC_MODO_DEMO=1.
+   En producción los estudiantes nunca lo ven. */
+const MODO_DEMO =
+  process.env.NODE_ENV !== "production" ||
+  process.env.NEXT_PUBLIC_MODO_DEMO === "1";
+
 /*
   Test de Holland — PRUEBA RIASEC (pantalla del estudiante, fuera de las fases):
    · 300 preguntas leídas de la BD (catálogo público; enunciados verbatim del Excel)
@@ -251,7 +258,7 @@ function CuerpoTest({
   /* — TEMPORAL para el demo del 13/11 con Liliana: llena al azar las
      respuestas que faltan del test (no se pidió en el flujo real). — */
   const llenarDemo = useCallback(async () => {
-    if (!preguntas) return;
+    if (!MODO_DEMO || !preguntas) return;
     if (
       !window.confirm(
         "Modo demo: se llenarán al azar las respuestas que faltan del test de Holland. ¿Continuar?",
@@ -458,10 +465,9 @@ function IntroInstrumento({
         Se guarda solo mientras avanzas — puedes salir y regresar otro día.
       </p>
 
-      {/* TEMPORAL — solo para el demo del 13/11 con Liliana: llena al azar las
-          respuestas que faltan para no responder las 300 en vivo. Se quita
-          después del demo (leidy lo pidió "solo por mañana"). */}
-      {!completo && (
+      {/* Herramienta de demo: llena al azar las respuestas que faltan para no
+          responder las 300 en vivo. Oculta en producción (ver MODO_DEMO). */}
+      {MODO_DEMO && !completo && (
         <button
           type="button"
           onClick={alLlenarDemo}
