@@ -60,7 +60,7 @@ export default function Home() {
           Sistema de diseño YLDC
         </h1>
         <p className="text-sm text-ink-2">
-          Componentes base — espejo de los mockups de Figma. Tipografía Poppins
+          Componentes base. Tipografía Poppins
           activa por next/font/google.
         </p>
       </header>

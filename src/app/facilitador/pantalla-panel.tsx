@@ -314,7 +314,7 @@ export function PantallaPanelFacilitador() {
           {formAbierto && (
             <div className="bg-white rounded-2xl shadow-card p-5 flex flex-col gap-3">
               <p className="text-sm font-bold text-navy">
-                Crear sesión (mockup 2.2)
+                Crear sesión
               </p>
 
               <div className="grid sm:grid-cols-2 gap-3">
@@ -979,7 +979,7 @@ function DetalleSesion({
         )}
         <p className="text-[11px] text-ink-2">
           Toca a un estudiante para ver sus respuestas. La tabla se actualiza
-          sola cuando el curso envía (mockup 2.4).
+          sola cuando el curso envía.
         </p>
       </section>
 
@@ -1042,7 +1042,7 @@ function DetalleSesion({
         </div>
         <p className="text-[11px] text-ink-2">
           Hay un comentario tuyo por sesión — puedes editarlo cuantas veces
-          necesites (mockup 2.5–2.6).
+          necesites.
         </p>
       </section>
 
