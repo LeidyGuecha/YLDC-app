@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ClockCounterClockwise,
@@ -26,7 +26,10 @@ import {
   listarFacilitadoras,
   listarPsicologas,
 } from "@/lib/admin/api";
-import { descargarPlantillaEstudiantes } from "@/lib/admin/plantilla";
+import {
+  descargarPlantillaEstudiantes,
+  leerExcelEstudiantes,
+} from "@/lib/admin/plantilla";
 import type {
   CuentaAdmin,
   CuentaFacilitadora,
@@ -42,20 +45,18 @@ import { supabaseConfigurado } from "@/lib/supabase/config";
 
 type Tab = "cuentas" | "estudiantes" | "historial";
 
-const COLOR_ACCION: Record<
-  string,
-  "teal" | "pinkSoft" | "yellow" | "neutral"
-> = {
-  crear: "teal",
-  activar: "teal",
-  desactivar: "pinkSoft",
-  editar: "neutral",
-  asignar: "teal",
-  desasignar: "pinkSoft",
-  cargar_excel: "yellow",
-  generar_reporte: "yellow",
-  generar_zip: "yellow",
-};
+const COLOR_ACCION: Record<string, "teal" | "pinkSoft" | "yellow" | "neutral"> =
+  {
+    crear: "teal",
+    activar: "teal",
+    desactivar: "pinkSoft",
+    editar: "neutral",
+    asignar: "teal",
+    desasignar: "pinkSoft",
+    cargar_excel: "yellow",
+    generar_reporte: "yellow",
+    generar_zip: "yellow",
+  };
 
 const ETIQUETA_ENTIDAD: Record<string, string> = {
   facilitadores: "Facilitadora",
@@ -184,10 +185,7 @@ export function PantallaPanelAdmin() {
       )}
 
       {tab === "cuentas" && (
-        <PanelCuentas
-          perfilPropioId={perfil.id}
-          alError={(m) => setError(m)}
-        />
+        <PanelCuentas perfilPropioId={perfil.id} alError={(m) => setError(m)} />
       )}
       {tab === "estudiantes" && (
         <PanelEstudiantes alError={(m) => setError(m)} />
@@ -252,9 +250,9 @@ function PanelCuentas({
   return (
     <section className="flex flex-col gap-5">
       <p className="text-xs text-ink-2">
-        Las cuentas se activan y desactivan (nunca se eliminan). El badge
-        «Sin vínculo» indica que la fila de rol todavía no tiene cuenta de
-        acceso de Supabase — se conecta con el paso 5 del README.
+        Las cuentas se activan y desactivan (nunca se eliminan). El badge «Sin
+        vínculo» indica que la fila de rol todavía no tiene cuenta de acceso de
+        Supabase — se conecta con el paso 5 del README.
       </p>
 
       <BloqueCuentas
@@ -401,7 +399,9 @@ function BloqueCuentas({
                             : undefined
                         }
                         className={`text-xs font-medium cursor-pointer disabled:opacity-40 ${
-                          f.activo ? "text-pink hover:underline" : "text-teal hover:underline"
+                          f.activo
+                            ? "text-pink hover:underline"
+                            : "text-teal hover:underline"
                         }`}
                       >
                         {ocupada ? (
@@ -550,11 +550,7 @@ function parsearLote(texto: string): {
   return filas;
 }
 
-function PanelEstudiantes({
-  alError,
-}: {
-  alError: (mensaje: string) => void;
-}) {
+function PanelEstudiantes({ alError }: { alError: (mensaje: string) => void }) {
   const [cursos, setCursos] = useState<CursoAdmin[]>([]);
   const [cursoSel, setCursoSel] = useState<string | null>(null);
   const [estudiantes, setEstudiantes] = useState<EstudianteDeCurso[]>([]);
@@ -570,6 +566,9 @@ function PanelEstudiantes({
   const [lote, setLote] = useState("");
   const [cargandoLote, setCargandoLote] = useState(false);
   const [descargando, setDescargando] = useState(false);
+  const [leyendoExcel, setLeyendoExcel] = useState(false);
+  const [avisoExcel, setAvisoExcel] = useState<string | null>(null);
+  const inputExcel = useRef<HTMLInputElement>(null);
   const [resultado, setResultado] = useState<{
     creados: number;
     omitidos: number;
@@ -631,6 +630,36 @@ function PanelEstudiantes({
     }
   }
 
+  async function alSubirExcel(e: React.ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0];
+    e.target.value = ""; // permite volver a subir el mismo archivo
+    if (!archivo) return;
+    setLeyendoExcel(true);
+    setAvisoExcel(null);
+    setResultado(null);
+    try {
+      const filas = await leerExcelEstudiantes(archivo);
+      if (filas.length === 0) {
+        setAvisoExcel(
+          `No encontramos estudiantes en «${archivo.name}». Revisa que la columna A tenga los nombres.`,
+        );
+        return;
+      }
+      const texto = filas
+        .map((f) => (f.ti ? `${f.nombreCompleto};${f.ti}` : f.nombreCompleto))
+        .join("\n");
+      // si ya había algo escrito, se agrega al final en vez de borrarlo
+      setLote((prev) => (prev.trim() ? `${prev.trimEnd()}\n${texto}` : texto));
+      setAvisoExcel(
+        `Se leyeron ${filas.length} estudiantes de «${archivo.name}». Revisa la lista y pulsa «Cargar lote».`,
+      );
+    } catch (err) {
+      alError(err instanceof Error ? err.message : mensajeAmable(err));
+    } finally {
+      setLeyendoExcel(false);
+    }
+  }
+
   async function alCargarLote() {
     if (!cursoSel) return;
     const filas = parsearLote(lote);
@@ -639,6 +668,8 @@ function PanelEstudiantes({
     try {
       const r = await cargarEstudiantes(cursoSel, filas);
       setResultado(r);
+      setLote("");
+      setAvisoExcel(null);
       setEstudiantes(await listarEstudiantesDeCurso(cursoSel));
     } catch (err) {
       alError(mensajeAmable(err));
@@ -753,28 +784,54 @@ function PanelEstudiantes({
                   Cargar estudiantes — {curso.etiqueta} · {curso.colegioNombre}
                 </h2>
                 <p className="text-[11px] text-ink-2">
-                  Pega la lista del Excel: una línea por estudiante con{" "}
+                  Sube la plantilla de Excel ya llena, o escribe a mano una
+                  línea por estudiante con{" "}
                   <span className="font-mono text-navy">Nombre;TI</span> (el TI
-                  es opcional; también acepta coma o el pegado de Excel). Los
-                  duplicados del curso o del lote se omiten solos.
+                  es opcional). Los duplicados del curso o del lote se omiten
+                  solos.
                 </p>
               </div>
-              <button
-                onClick={() => {
-                  setDescargando(true);
-                  void descargarPlantillaEstudiantes();
-                  // la descarga es local: el spinner es solo cosmético
-                  setTimeout(() => setDescargando(false), 600);
-                }}
-                disabled={descargando}
-                className="h-8 px-3 shrink-0 rounded-lg border border-teal text-teal text-xs font-medium inline-flex items-center gap-1.5 hover:bg-tint-teal disabled:opacity-40 cursor-pointer"
-              >
-                {descargando ? (
-                  <SpinnerGap size={12} className="animate-spin" />
-                ) : null}
-                Descargar plantilla (.xlsx)
-              </button>
+              <div className="flex flex-wrap gap-2 shrink-0">
+                <input
+                  ref={inputExcel}
+                  type="file"
+                  accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  onChange={alSubirExcel}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => inputExcel.current?.click()}
+                  disabled={leyendoExcel}
+                  className="h-8 px-3 shrink-0 rounded-lg bg-teal text-white text-xs font-medium inline-flex items-center gap-1.5 hover:opacity-90 disabled:opacity-40 cursor-pointer"
+                >
+                  {leyendoExcel ? (
+                    <SpinnerGap size={12} className="animate-spin" />
+                  ) : null}
+                  Subir Excel (.xlsx)
+                </button>
+                <button
+                  onClick={() => {
+                    setDescargando(true);
+                    void descargarPlantillaEstudiantes();
+                    // la descarga es local: el spinner es solo cosmético
+                    setTimeout(() => setDescargando(false), 600);
+                  }}
+                  disabled={descargando}
+                  className="h-8 px-3 shrink-0 rounded-lg border border-teal text-teal text-xs font-medium inline-flex items-center gap-1.5 hover:bg-tint-teal disabled:opacity-40 cursor-pointer"
+                >
+                  {descargando ? (
+                    <SpinnerGap size={12} className="animate-spin" />
+                  ) : null}
+                  Descargar plantilla (.xlsx)
+                </button>
+              </div>
             </div>
+
+            {avisoExcel && (
+              <p className="text-xs text-teal bg-tint-teal rounded-lg px-3 py-2">
+                {avisoExcel}
+              </p>
+            )}
 
             <textarea
               value={lote}
@@ -839,7 +896,9 @@ function PanelEstudiantes({
                     </span>
                     <span className="text-xs text-ink-2 flex items-center gap-2">
                       {e.ti ?? "—"}
-                      <Badge variant={e.origen === "excel" ? "yellow" : "neutral"}>
+                      <Badge
+                        variant={e.origen === "excel" ? "yellow" : "neutral"}
+                      >
                         {e.origen === "excel" ? "Excel" : "Directo"}
                       </Badge>
                     </span>
@@ -856,11 +915,7 @@ function PanelEstudiantes({
 
 /* ───────────────── Pestaña Historial (4.8) ───────────────── */
 
-function PanelHistorial({
-  alError,
-}: {
-  alError: (mensaje: string) => void;
-}) {
+function PanelHistorial({ alError }: { alError: (mensaje: string) => void }) {
   const [entradas, setEntradas] = useState<RegistroAudit[] | null>(null);
 
   useEffect(() => {
@@ -888,8 +943,7 @@ function PanelHistorial({
 
       {entradas === null ? (
         <p className="text-xs text-ink-2 inline-flex items-center gap-2">
-          <SpinnerGap size={13} className="animate-spin" /> Cargando
-          historial…
+          <SpinnerGap size={13} className="animate-spin" /> Cargando historial…
         </p>
       ) : entradas.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-card p-8 text-center">
