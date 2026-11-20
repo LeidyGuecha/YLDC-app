@@ -270,16 +270,32 @@ export async function listarProgresoTest(
   sesionId: string,
 ): Promise<ProgresoTestPanel[]> {
   const sb = asegurarSB();
-  const { data, error } = await sb
-    .from("respuestas_test_holland")
-    .select("estudiante_id")
-    .eq("sesion_id", sesionId);
-  if (error) throw new ErrorPanelo("OTRO", error.message);
   const conteo = new Map<string, number>();
-  for (const r of data ?? []) {
-    const id = r.estudiante_id;
-    conteo.set(id, (conteo.get(id) ?? 0) + 1);
+
+  // Supabase recorta cada consulta a 1.000 filas por defecto: una sesión con
+  // varios estudiantes y 300 preguntas supera ese tope (p. ej. 15 × 300 =
+  // 4.500). Paginamos hasta traer todas para que el monitoreo no muestre 0/300.
+  const PAGINA = 1000;
+  let desde = 0;
+
+  for (;;) {
+    const { data, error } = await sb
+      .from("respuestas_test_holland")
+      .select("estudiante_id")
+      .eq("sesion_id", sesionId)
+      .order("id", { ascending: true })
+      .range(desde, desde + PAGINA - 1);
+    if (error) throw new ErrorPanelo("OTRO", error.message);
+
+    const filas = data ?? [];
+    for (const r of filas) {
+      const id = r.estudiante_id;
+      conteo.set(id, (conteo.get(id) ?? 0) + 1);
+    }
+    if (filas.length < PAGINA) break;
+    desde += PAGINA;
   }
+
   return [...conteo].map(([estudianteId, respondidas]) => ({
     estudianteId,
     respondidas,

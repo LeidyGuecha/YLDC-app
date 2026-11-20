@@ -10,7 +10,9 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-Página raíz (`/`) = **showcase del sistema de diseño** (paleta YLDC, botones, inputs, badges, cards, checkbox, tooltip, stepper). Valídala contra los mockups de `../mockups/png/`.
+Página raíz (`/`) = **selector de acceso por rol** («¿Quién entra hoy?»). El
+showcase del sistema de diseño (paleta YLDC, botones, inputs, badges, cards,
+checkbox, tooltip, stepper) vive en `/diseno`.
 
 ## Variables de entorno
 
@@ -33,11 +35,17 @@ src/
 supabase/            # schema.sql + seed.sql (pegar en el SQL Editor)
 ```
 
-## Pendientes de setup externo
+## Despliegue
 
-- **Poppins:** copiar `Poppins-Regular/Medium/SemiBold/Bold.ttf` a `src/fonts/` y montar `next/font/local` en `layout.tsx` (el CSS ya referencia `var(--font-poppins)`).
-- **Supabase:** crear proyecto `yldc-fondacio` (región São Paulo) y pegar `supabase/schema.sql` + `seed.sql` en el SQL Editor.
-- **GitHub:** repo remoto `yldc-app` + primer push.
+**Producción:** https://yldc-app.vercel.app
+
+La app está desplegada en Vercel (equipo `YLDC-Talleres`, proyecto `yldc-app`)
+conectada al repositorio `LeidyGuecha/YLDC-app`. Cada push a `main` publica en
+producción; las ramas generan *previews*.
+
+Las variables `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` se
+configuran en Vercel (Settings → Environment Variables) y nunca se versionan.
+El detalle completo está en [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md).
 
 ## Roles y acceso
 
